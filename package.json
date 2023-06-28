@@ -1,0 +1,53 @@
+{
+  "name": "@stevent-team/fir",
+  "version": "0.0.1",
+  "description": "Forms in React",
+  "keywords": [
+    "react",
+    "hooks",
+    "fir",
+    "forms"
+  ],
+  "repository": "https://github.com/stevent-team/fir",
+  "author": "Stevent Team (https://stevent.club)",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "ci:release": "yarn build && yarn changeset publish"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "module": "./dist/fir.js",
+  "main": "./dist/fir.umd.cjs",
+  "types": "./dist/fir.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/fir.js",
+      "require": "./dist/fir.umd.cjs"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "zod": ">=3.9.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.2",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "@vitejs/plugin-react": "^4.0.1",
+    "eslint": "^8.43.0",
+    "eslint-plugin-react": "^7.32.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.1.5",
+    "vite": "^4.3.9",
+    "vite-plugin-dts": "^3.0.0-beta.3",
+    "vitest": "^0.32.2"
+  }
+}
