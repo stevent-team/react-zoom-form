@@ -10,12 +10,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@stevent-team/fir': resolve(__dirname, '/lib/index.tsx')
+      '@stevent-team/fir': resolve(__dirname, 'lib/index.ts')
     }
   },
   build: {
     lib: {
-      entry: resolve(__dirname, 'lib/index.tsx'),
+      entry: resolve(__dirname, 'lib/index.ts'),
       name: 'fir',
       fileName: 'fir',
     },

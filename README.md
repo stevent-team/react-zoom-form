@@ -19,7 +19,7 @@ import { z } from 'zod'
 // Define the structure and validation of your form
 const schema = z.object({
   name: z.string().min(3).max(100),
-  age: z.coerce.number().optional().min(13),
+  age: z.coerce.number().min(13).optional(),
   link: z.object({
     label: z.string(),
     url: z.string().url(),
