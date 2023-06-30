@@ -7,17 +7,22 @@ const schema = z.object({
   optionalString: z.string().trim(),
   defaultString: z.string().trim().default('Default value'),
   number: z.coerce.number().min(3).max(10),
-  // link: z.object({
-  //   label: z.string(),
-  //   url: z.string().url(),
-  // }).default({ label: 'a', url: 'https://test.com' }),
+  nested: z.object({
+    inside: z.object({
+      here: z.string().trim(),
+    }),
+  }),
+  link: z.object({
+    label: z.string(),
+    url: z.string().url(),
+  }).default({ label: 'a', url: 'https://test.com' }),
 })
 
 const Error = ({ errors }: { errors: ZodIssue[] | undefined }) =>
   errors && errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
 const App = () => {
-  const { register, handleSubmit, errors } = useForm({ schema })
+  const { fields, handleSubmit, errors } = useForm({ schema })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
@@ -25,19 +30,23 @@ const App = () => {
 
   return <form onSubmit={handleSubmit(onSubmit)}>
     <label htmlFor="requiredString">Required string</label>
-    <input {...register('requiredString')} type="text" />
+    <input {...fields.requiredString.register()} type="text" />
     <Error errors={errors?.fieldErrors.requiredString} />
 
     <label htmlFor="optionalString">Optional string</label>
-    <input {...register('optionalString')} type="text" />
+    <input {...fields.optionalString.register()} type="text" />
     <Error errors={errors?.fieldErrors.optionalString} />
 
     <label htmlFor="defaultString">Default string</label>
-    <input {...register('defaultString')} type="text" />
+    <input {...fields.defaultString.register()} type="text" />
     <Error errors={errors?.fieldErrors.defaultString} />
 
+    <label htmlFor="nested.inside.here">Nested string</label>
+    <input {...fields.nested.inside.here.register()} type="text" />
+    <Error errors={errors?.fieldErrors.nested} />
+
     <label htmlFor="number">Number</label>
-    <input {...register('number')} type="number" />
+    <input {...fields.number.register()} type="number" />
     <Error errors={errors?.fieldErrors.number} />
 
     <button>Save changes</button>

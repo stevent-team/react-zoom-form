@@ -6,7 +6,8 @@
     "react",
     "hooks",
     "fir",
-    "forms"
+    "forms",
+    "zod"
   ],
   "repository": "https://github.com/stevent-team/fir",
   "author": "Stevent Team (https://stevent.club)",

@@ -1,5 +1,8 @@
 # 🌲 Fir - Forms in React
 
+> **Warning**
+> Fir is in alpha, and the API may change entirely within minor releases. Please use at your own risk.
+
 Typescript-first, hook-based forms using React, powered by [Zod](https://github.com/colinhacks/zod).
 
 ## Usage
@@ -13,30 +16,36 @@ yarn add @stevent-team/fir zod
 Example usage:
 
 ```tsx
-import { useForm, useField, FieldProps } from '@stevent-team/fir'
+import { useForm, useField, Control } from '@stevent-team/fir'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
-  name: z.string().min(3).max(100),
-  age: z.coerce.number().min(13).optional(),
+  name: z.string().min(1, 'This field is required'),
+  age: z.coerce.number().min(13),
+  address: z.object({
+    street: z.string(),
+    city: z.string(),
+  }),
   link: z.object({
     label: z.string(),
     url: z.string().url(),
-  }),
+  }).default({ label: '', url: '' }),
 })
 
 const EditPage = () => {
-  const { field, control, handleSubmit } = useForm({ schema })
+  const { fields, control, handleSubmit } = useForm({ schema })
 
   const onSubmit = values => {
     console.log(values)
   }
 
   return <form onSubmit={handleSubmit(onSubmit)}>
-    <input {...field('name')} type="text" />
-    <input {...field('age')} type="number" />
-    <LinkField field={field('link')} />
+    <input {...fields.name.register()} type="text" />
+    <input {...fields.age()} type="number" />
+    <input {...fields.address.street()} type="text" />
+    <input {...fields.address.city()} type="text" />
+    <LinkField field={fields.link} />
     <button>Save changes</button>
   </form>
 }
@@ -47,7 +56,7 @@ interface Link {
   url: string
 }
 
-const LinkField = ({ field }: { field: FieldProps<Link> }) => {
+const LinkField = ({ field }: { field: Field<Link> }) => {
   const { value, onChange } = useField(field)
 
   return <div>
