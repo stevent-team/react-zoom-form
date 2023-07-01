@@ -1,14 +1,5 @@
 import { RegisterFn } from '.'
-import { ZodObject, ZodType, z } from 'zod'
-
-export const getDefaults = <Schema extends z.AnyZodObject>(schema: Schema) =>
-  Object.fromEntries(
-    Object.entries(schema.shape).map(([key, value]) => {
-      if (value instanceof z.ZodDefault) return [key, value._def.defaultValue()]
-      if (value instanceof z.ZodString || value instanceof z.ZodNumber) return [key, '']
-      return [key, undefined]
-    })
-  ) as Record<keyof Schema['shape'], any>
+import { z } from 'zod'
 
 type recursiveFormatSchema<TSchema, Value, Union> = TSchema extends Value ? TSchema
   : TSchema extends [any, ...any[]] ? {
@@ -20,7 +11,14 @@ type recursiveFormatSchema<TSchema, Value, Union> = TSchema extends Value ? TSch
   } : Value
 export type FormatSchema<TSchema, Value, Union = unknown> = Union & recursiveFormatSchema<NonNullable<TSchema>, Value, Union>
 
-const unwrapZodType = (type: ZodType): ZodType => {
+export type RecursivePartial<T> = {
+  [P in keyof T]?:
+    T[P] extends (infer U)[] ? RecursivePartial<U>[] :
+    T[P] extends object | undefined ? RecursivePartial<T[P]> :
+    T[P]
+}
+
+export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
 
   if (type instanceof z.ZodEffects) return unwrapZodType(type.innerType())
@@ -31,7 +29,7 @@ const unwrapZodType = (type: ZodType): ZodType => {
   return type
 }
 
-export const chain = (schema: ZodType, path: string[], register: RegisterFn): any =>
+export const chain = (schema: z.ZodType, path: string[], register: RegisterFn): any =>
   new Proxy(schema, {
     get: (_target, key) => {
       if (typeof key !== 'string') {
@@ -43,7 +41,13 @@ export const chain = (schema: ZodType, path: string[], register: RegisterFn): an
       }
 
       const unwrapped = unwrapZodType(schema)
-      if (!(unwrapped instanceof ZodObject)) {
+
+      // Support arrays
+      if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
+        return chain(unwrapped._def.type, [...path, key], register)
+      }
+
+      if (!(unwrapped instanceof z.ZodObject)) {
         if (key === 'register') return () => register(path, schema)
         throw new Error(`Expected ZodObject at "${path.join('.')}" got ${schema.constructor.name}`)
       }
@@ -52,7 +56,7 @@ export const chain = (schema: ZodType, path: string[], register: RegisterFn): an
     },
   }) as unknown
 
-// TODO: Use these from @giraugh/tools
+// TODO: Correctly set/get array properties
 /** Fetch an object's deeply nested property */
 export const getDeepProp = <T extends Record<string, unknown>>(obj: T, path: string[]): unknown => {
   if (path.length === 0) return obj

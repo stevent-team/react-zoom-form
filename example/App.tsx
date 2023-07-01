@@ -3,15 +3,20 @@ import { ZodIssue, z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
-  requiredString: z.string().trim().min(1, 'This field is required'),
-  optionalString: z.string().trim(),
+  requiredString: z.string().trim().min(1, 'This field is required').default(''),
+  optionalString: z.string().trim().default(''),
   defaultString: z.string().trim().default('Default value'),
   number: z.coerce.number().min(3).max(10),
   nested: z.object({
     inside: z.object({
-      here: z.string().trim(),
+      here: z.string().trim().default(''),
     }),
   }),
+  array: z.array(
+    z.object({
+      prop: z.string().trim().default(''),
+    }),
+  ),
   link: z.object({
     label: z.string(),
     url: z.string().url(),
@@ -21,8 +26,12 @@ const schema = z.object({
 const Error = ({ errors }: { errors: ZodIssue[] | undefined }) =>
   errors && errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
+const initialValues = {
+  defaultString: 'Default value',
+}
+
 const App = () => {
-  const { fields, handleSubmit, errors } = useForm({ schema })
+  const { fields, handleSubmit, errors } = useForm({ schema, initialValues })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
@@ -44,6 +53,10 @@ const App = () => {
     <label htmlFor="nested.inside.here">Nested string</label>
     <input {...fields.nested.inside.here.register()} type="text" />
     <Error errors={errors?.fieldErrors.nested} />
+
+    <label htmlFor="array.0.prop">Array value</label>
+    <input {...fields.array[0].prop.register()} type="text" />
+    <Error errors={errors?.fieldErrors.array} />
 
     <label htmlFor="number">Number</label>
     <input {...fields.number.register()} type="number" />

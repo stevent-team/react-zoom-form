@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZodIssue, ZodType, z } from 'zod'
 
-import { FormatSchema, chain, getDeepProp, getDefaults, setDeepProp } from './utils'
+import { FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
+  /** The zod schema to use when parsing the values. */
   schema: Schema
+  /** Initialise the fields with values. By default they will be set to undefined. */
+  initialValues?: RecursivePartial<z.infer<Schema>>
 }
 
 export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
@@ -21,9 +24,11 @@ export type RegisterFn = (path: string[], schema: ZodType) => {
  */
 export const useForm = <Schema extends z.AnyZodObject>({
   schema,
+  initialValues = {},
 }: UseFormOptions<Schema>) => {
-  const [formValue, setFormValue] = useState(getDefaults(schema))
+  const [formValue, setFormValue] = useState(initialValues)
   const [errors, setErrors] = useState<z.inferFlattenedErrors<Schema, ZodIssue>>()
+  const fieldRefs = useRef<Partial<FormatSchema<z.infer<Schema>, HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined>>>({})
 
   // Whether or not to validate fields when anything changes
   const [validateOnChange, setValidateOnChange] = useState(false)
@@ -45,27 +50,31 @@ export const useForm = <Schema extends z.AnyZodObject>({
   }, [formValue, validateOnChange, validate])
 
   // Submit handler
-  const handleSubmit = (handler: SubmitHandler<Schema>): React.FormEventHandler<HTMLFormElement> => async e => {
+  const handleSubmit = useCallback((handler: SubmitHandler<Schema>): React.FormEventHandler<HTMLFormElement> => async e => {
     e.preventDefault()
     e.stopPropagation()
     const values = await validate()
     if (values) handler(values)
     setValidateOnChange(true)
-  }
+  }, [validate])
 
   // Register for native elements (input, textarea, select)
-  const register: RegisterFn = path => {
-    const fieldRef = useRef<any>(null)
-
-    return {
+  const register: RegisterFn = (path, fieldSchema) => useMemo(() => (
+    {
       value: String(getDeepProp(formValue, path) ?? ''),
-      onChange: e => setFormValue(setDeepProp(formValue, path, e.currentTarget.value)),
+      onChange: e => {
+        let newValue: string | undefined = e.currentTarget.value
+        if (!(unwrapZodType(fieldSchema) instanceof z.ZodString) && newValue === '') {
+          newValue = undefined
+        }
+        setFormValue(v => setDeepProp(v, path, newValue))
+      },
       name: path.join('.'),
-      ref: fieldRef,
+      ref: r => fieldRefs.current = setDeepProp(fieldRefs.current, path, r),
     } satisfies React.ComponentProps<'input'>
-  }
+  ), [path.join('.'), getDeepProp(formValue, path)])
 
-  const fields = new Proxy(schema.shape, {
+  const fields = useMemo(() => new Proxy(schema.shape, {
     get: (_target, key) => chain(schema, [], register)[key]
   }) as FormatSchema<z.infer<Schema>, {
     /**
@@ -75,7 +84,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
      * <input type="text" {...fields.firstName.register()} />
      */
     register: () => ReturnType<RegisterFn>
-  }, { _schema: ZodType }>
+  }, { _schema: ZodType }>, [schema, register])
 
   return {
     /** Access zod schema and registration functions for your fields. */

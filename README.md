@@ -1,9 +1,9 @@
 # 🌲 Fir - Forms in React
 
-> **Warning**
+> **Warning**<br>
 > Fir is in alpha, and the API may change entirely within minor releases. Please use at your own risk.
 
-Typescript-first, hook-based forms using React, powered by [Zod](https://github.com/colinhacks/zod).
+Typescript-first, hook-based forms using React, powered by [Zod](https://github.com/colinhacks/zod). Inspired by [react-hook-form](https://github.com/react-hook-form/react-hook-form) and [react-zorm](https://github.com/esamattis/react-zorm).
 
 ## Usage
 
@@ -16,16 +16,16 @@ yarn add @stevent-team/fir zod
 Example usage:
 
 ```tsx
-import { useForm, useField, Control } from '@stevent-team/fir'
+import { useForm, useField } from '@stevent-team/fir'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
-  name: z.string().min(1, 'This field is required'),
+  name: z.string().min(1, 'This field is required').default(''),
   age: z.coerce.number().min(13),
   address: z.object({
-    street: z.string(),
-    city: z.string(),
+    street: z.string().default(''),
+    city: z.string().default(''),
   }),
   link: z.object({
     label: z.string(),
@@ -34,7 +34,7 @@ const schema = z.object({
 })
 
 const EditPage = () => {
-  const { fields, control, handleSubmit } = useForm({ schema })
+  const { fields, handleSubmit } = useForm({ schema })
 
   const onSubmit = values => {
     console.log(values)
@@ -42,9 +42,9 @@ const EditPage = () => {
 
   return <form onSubmit={handleSubmit(onSubmit)}>
     <input {...fields.name.register()} type="text" />
-    <input {...fields.age()} type="number" />
-    <input {...fields.address.street()} type="text" />
-    <input {...fields.address.city()} type="text" />
+    <input {...fields.age.register()} type="number" />
+    <input {...fields.address.street.register()} type="text" />
+    <input {...fields.address.city.register()} type="text" />
     <LinkField field={fields.link} />
     <button>Save changes</button>
   </form>
