@@ -19,5 +19,10 @@ export default defineConfig({
       name: 'fir',
       fileName: 'fir',
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './test/setup.ts',
   }
 })
