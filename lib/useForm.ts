@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZodIssue, ZodType, z } from 'zod'
 
-import { FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType } from './utils'
+import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -12,7 +12,7 @@ export interface UseFormOptions<Schema extends z.AnyZodObject> {
 
 export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
 
-export type RegisterFn = (path: string[], schema: ZodType) => {
+export type RegisterFn = (path: PathSegment[], schema: ZodType) => {
   value: string
   onChange: React.ChangeEventHandler<any>
   ref: React.LegacyRef<any>

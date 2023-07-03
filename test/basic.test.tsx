@@ -31,7 +31,7 @@ describe('Simple flat form with text values', () => {
 
   const setup = (onSubmit?: SubmitHandler<typeof schema>) => ({
     user: userEvent.setup(),
-    ...render(<BasicForm onSubmit={onSubmit ?? (() => {})} />)
+    ...render(<BasicForm onSubmit={onSubmit ?? (() => void {})} />)
   })
 
   it('renders inputs with the given names', async () => {
@@ -39,8 +39,8 @@ describe('Simple flat form with text values', () => {
     setup()
 
     // Look for the inputs
-    for (let inputName of Object.keys(schema.shape)) {
-      const input = screen.getByPlaceholderText(inputName);
+    for (const inputName of Object.keys(schema.shape)) {
+      const input = screen.getByPlaceholderText(inputName)
       expect(input.getAttribute('name')).toBe(inputName)
     }
   })
@@ -53,17 +53,17 @@ describe('Simple flat form with text values', () => {
     })
 
     const submitButton = screen.getByRole('button')
-    const givenNameInput = screen.getByPlaceholderText('givenName');
-    const familyNameInput = screen.getByPlaceholderText('familyName');
+    const givenNameInput = screen.getByPlaceholderText('givenName')
+    const familyNameInput = screen.getByPlaceholderText('familyName')
 
-    await user.type(givenNameInput, "john")
-    await user.type(familyNameInput, "green")
+    await user.type(givenNameInput, 'john')
+    await user.type(familyNameInput, 'green')
     await user.click(submitButton)
 
     expect(formValues).toBeTruthy()
     expect(formValues).toEqual({
-      givenName: "john",
-      familyName: "green",
+      givenName: 'john',
+      familyName: 'green',
     })
   })
 
@@ -72,10 +72,10 @@ describe('Simple flat form with text values', () => {
     const onSubmit = vi.fn()
     const { user } = setup(onSubmit)
 
-    // Enter a given name but not a family name 
+    // Enter a given name but not a family name
     const submitButton = screen.getByRole('button')
-    const givenNameInput = screen.getByPlaceholderText('givenName');
-    await user.type(givenNameInput, "john")
+    const givenNameInput = screen.getByPlaceholderText('givenName')
+    await user.type(givenNameInput, 'john')
     await user.click(submitButton)
 
     // Validation should fail because missing familyName
@@ -83,7 +83,7 @@ describe('Simple flat form with text values', () => {
     expect(onSubmit).not.toHaveBeenCalled()
 
     // Should show errors
-    expect(screen.getAllByRole("alert")).toHaveLength(1)
+    expect(screen.getAllByRole('alert')).toHaveLength(1)
     expect(screen.getByText(/field is required/i)).toBeTruthy()
   })
 })
