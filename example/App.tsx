@@ -31,10 +31,11 @@ const initialValues = {
 }
 
 const App = () => {
-  const { fields, handleSubmit, errors } = useForm({ schema, initialValues })
+  const { fields, handleSubmit, errors, isDirty, reset } = useForm({ schema, initialValues })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
+    reset(values)
   }
 
   return <form onSubmit={handleSubmit(onSubmit)}>
@@ -63,6 +64,10 @@ const App = () => {
     <Error errors={errors?.fieldErrors.number} />
 
     <button>Save changes</button>
+
+    <output>
+      <span>isDirty: {isDirty ? 'true' : 'false'}</span>
+    </output>
   </form>
 }
 

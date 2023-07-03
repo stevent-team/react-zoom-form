@@ -152,3 +152,38 @@ export const setDeepProp = <T extends Obj>(obj: T, path: PathSegment[], value: u
     [head.key]: setDeepProp(obj[head.key as keyof T] as T, tail, value)
   }
 }
+
+type Primitive = null | undefined | string | number | boolean | symbol | bigint
+const isPrimitive = (value: unknown): value is Primitive => value === null || value === undefined || typeof value !== 'object'
+const isDateObject = (value: unknown): value is Date => value instanceof Date
+const isObject = <T extends object>(value: unknown): value is T => value !== null && value !== undefined && !Array.isArray(value) && typeof value === 'object' && !isDateObject(value)
+
+export const deepEqual = (object1: any, object2: any) => {
+  if (isPrimitive(object1) || isPrimitive(object2)) {
+    return object1 === object2
+  }
+
+  if (isDateObject(object1) && isDateObject(object2)) {
+    return object1.getTime() === object2.getTime()
+  }
+
+  const [keys1, keys2] = [Object.keys(object1), Object.keys(object2)]
+
+  if (keys1.length !== keys2.length) return false
+
+  for (const key of keys1) {
+    if (!keys2.includes(key)) return false
+
+    const [val1, val2] = [object1[key], object2[key]]
+
+    if (
+      (isDateObject(val1) && isDateObject(val2)) ||
+      (isObject(val1) && isObject(val2)) ||
+      (Array.isArray(val1) && Array.isArray(val2))
+        ? !deepEqual(val1, val2)
+        : val1 !== val2
+    ) return false
+  }
+
+  return true
+}

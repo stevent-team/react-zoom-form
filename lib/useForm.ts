@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZodIssue, ZodType, z } from 'zod'
 
-import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType } from './utils'
+import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -26,12 +26,21 @@ export const useForm = <Schema extends z.AnyZodObject>({
   schema,
   initialValues = {},
 }: UseFormOptions<Schema>) => {
-  const [formValue, setFormValue] = useState(initialValues)
+  const [formValue, setFormValue] = useState(structuredClone(initialValues))
   const [errors, setErrors] = useState<z.inferFlattenedErrors<Schema, ZodIssue>>()
   const fieldRefs = useRef<Partial<FormatSchema<z.infer<Schema>, HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined>>>({})
 
   // Whether or not to validate fields when anything changes
   const [validateOnChange, setValidateOnChange] = useState(false)
+
+  // Keep track of the initial form values to calculate isDirty
+  const [internalInitialValues, setInternalInitialValues] = useState(structuredClone(initialValues))
+  const isDirty = useMemo(() => !deepEqual(formValue, internalInitialValues), [formValue, internalInitialValues])
+
+  const reset = useCallback((values: RecursivePartial<z.infer<Schema>> = initialValues) => {
+    setInternalInitialValues(values)
+    setFormValue(values)
+  }, [initialValues])
 
   // Validate by parsing form data with zod schema, and return parsed data if valid
   const validate = useCallback(async () => {
@@ -99,5 +108,9 @@ export const useForm = <Schema extends z.AnyZodObject>({
      */
     handleSubmit,
     errors,
+    /** Will check if the form values are not deeply equal with the initialValues passed in the config or provided via `reset()`. */
+    isDirty,
+    /** Reset the form with provided values, or with initialValues if nothing is passed. */
+    reset,
   }
 }
