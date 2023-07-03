@@ -47,3 +47,8 @@ button {
     color: lightcoral;
   }
 }
+
+output {
+  font-family: monospace;
+  white-space: pre;
+}

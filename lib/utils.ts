@@ -1,4 +1,4 @@
-import { RegisterFn } from '.'
+import { FieldControls, RegisterFn } from '.'
 import { z } from 'zod'
 
 type recursiveFormatSchema<TSchema, Value, Union> = TSchema extends Value ? TSchema
@@ -10,6 +10,18 @@ type recursiveFormatSchema<TSchema, Value, Union> = TSchema extends Value ? TSch
     [K in keyof TSchema]: FormatSchema<TSchema[K], Value, Union>
   } : Value
 export type FormatSchema<TSchema, Value, Union = unknown> = Union & recursiveFormatSchema<NonNullable<TSchema>, Value, Union>
+
+type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Schema> extends Value ? z.infer<Schema>
+  : Schema extends z.AnyZodTuple ? {
+    [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value>
+  } : Schema extends z.ZodArray<any> ? {
+    [k: number]: FormatSchemaFields<Schema['_def']['type'], Value>
+  } : Schema extends z.AnyZodObject ? {
+    [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['shape'][K], Value>
+  } : Schema extends z.ZodDefault<any> ?
+    FormatSchemaFields<Schema['_def']['innerType'], Value>
+  : Value
+export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & recursiveFormatSchemaFields<NonNullable<Schema>, Value>
 
 export type RecursivePartial<T> = {
   [P in keyof T]?:
@@ -35,30 +47,35 @@ export type PathSegment = {
   type: 'object' | 'array'
 }
 
-export const chain = (schema: z.ZodType, path: PathSegment[], register: RegisterFn): any =>
+export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
   new Proxy(schema, {
     get: (_target, key) => {
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
       }
 
-      if (key === '_schema') {
-        return schema
+      if (key === '_field') {
+        return {
+          schema,
+          path,
+          formValue: controls.formValue,
+          setFormValue: controls.setFormValue,
+        } satisfies FieldControls<z.ZodTypeAny>
       }
 
       const unwrapped = unwrapZodType(schema)
 
       // Support arrays
       if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
-        return chain(unwrapped._def.type, [...path, { key, type: 'array' }], register)
+        return chain(unwrapped._def.type, [...path, { key, type: 'array' }], register, controls)
       }
 
       if (!(unwrapped instanceof z.ZodObject)) {
         if (key === 'register') return () => register(path, schema)
-        throw new Error(`Expected ZodObject at "${path.join('.')}" got ${schema.constructor.name}`)
+        throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
       }
 
-      return chain(unwrapped.shape[key], [...path, { key, type: 'object' }], register)
+      return chain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, controls)
     },
   }) as unknown
 

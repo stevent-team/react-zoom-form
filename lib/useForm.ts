@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZodIssue, ZodType, z } from 'zod'
 
-import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual } from './utils'
+import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -78,14 +78,14 @@ export const useForm = <Schema extends z.AnyZodObject>({
         }
         setFormValue(v => setDeepProp(v, path, newValue))
       },
-      name: path.join('.'),
+      name: path.map(p => p.key).join('.'),
       ref: r => fieldRefs.current = setDeepProp(fieldRefs.current, path, r),
     } satisfies React.ComponentProps<'input'>
-  ), [path.join('.'), getDeepProp(formValue, path)])
+  ), [path.map(p => p.key).join('.'), getDeepProp(formValue, path)])
 
   const fields = useMemo(() => new Proxy(schema.shape, {
-    get: (_target, key) => chain(schema, [], register)[key]
-  }) as FormatSchema<z.infer<Schema>, {
+    get: (_target, key) => chain(schema, [], register, { formValue, setFormValue })[key]
+  }) as FormatSchemaFields<Schema, {
     /**
      * Provides props to pass to native elements (input, textarea, select)
      *
@@ -93,7 +93,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
      * <input type="text" {...fields.firstName.register()} />
      */
     register: () => ReturnType<RegisterFn>
-  }, { _schema: ZodType }>, [schema, register])
+  }>, [schema, register])
 
   return {
     /** Access zod schema and registration functions for your fields. */

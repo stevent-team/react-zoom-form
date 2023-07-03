@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm } from '@stevent-team/fir'
+import { SubmitHandler, useForm, Field, useField } from '@stevent-team/fir'
 import { ZodIssue, z } from 'zod'
 
 // Define the structure and validation of your form
@@ -20,7 +20,7 @@ const schema = z.object({
   link: z.object({
     label: z.string(),
     url: z.string().url(),
-  }).default({ label: 'a', url: 'https://test.com' }),
+  }).default({ label: 'default from zod', url: 'https://example.com' }),
 })
 
 const Error = ({ errors }: { errors: ZodIssue[] | undefined }) =>
@@ -63,12 +63,40 @@ const App = () => {
     <input {...fields.number.register()} type="number" />
     <Error errors={errors?.fieldErrors.number} />
 
+    <label htmlFor="link">Link (custom component)</label>
+    <LinkField field={fields.link} />
+    <Error errors={errors?.fieldErrors.link} />
+
     <button>Save changes</button>
 
     <output>
       <span>isDirty: {isDirty ? 'true' : 'false'}</span>
     </output>
   </form>
+}
+
+interface Link {
+  label: string
+  url: string
+}
+
+const LinkField = ({ field }: { field: Field<Link> }) => {
+  const { value, onChange } = useField(field)
+
+  return <div style={{ display: 'flex', gap: '.5em' }}>
+    <input
+      type="text"
+      placeholder="Label"
+      value={value?.label ?? ''}
+      onChange={e => onChange({ ...value, label: e.currentTarget.value })}
+    />
+    <input
+      type="url"
+      placeholder="URL"
+      value={value?.url ?? ''}
+      onChange={e => onChange({ ...value, url: e.currentTarget.value })}
+    />
+  </div>
 }
 
 export default App
