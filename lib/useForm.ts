@@ -114,6 +114,13 @@ export const useForm = <Schema extends z.AnyZodObject>({
      * <input type="text" {...fields.firstName.register()} />
      */
     register: () => ReturnType<RegisterFn>
+    /**
+     * Get the name of this field used by the register function.
+     *
+     * @example
+     * <label htmlFor={field.firstName.name()}>First name</label>
+     */
+    name: () => string
   }>, [schema, register, formValue, formErrors])
 
   const errors = useMemo(() => new Proxy(schema.shape, {

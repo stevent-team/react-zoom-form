@@ -41,41 +41,41 @@ const App = () => {
   }
 
   return <form onSubmit={handleSubmit(onSubmit)}>
-    <label htmlFor="requiredString">Required string</label>
+    <label htmlFor={fields.requiredString.name()}>Required string</label>
     <input {...fields.requiredString.register()} type="text" />
     <Error errors={errors.requiredString} />
 
-    <label htmlFor="optionalString">Optional string</label>
+    <label htmlFor={fields.optionalString.name()}>Optional string</label>
     <input {...fields.optionalString.register()} type="text" />
     <Error errors={errors.optionalString} />
 
-    <label htmlFor="defaultString">Default string</label>
+    <label htmlFor={fields.defaultString.name()}>Default string</label>
     <input {...fields.defaultString.register()} type="text" />
     <Error errors={errors.defaultString} />
 
-    <label htmlFor="nested.inside.here">Nested string</label>
+    <label htmlFor={fields.nested.inside.here.name()}>Nested string</label>
     <input {...fields.nested.inside.here.register()} type="text" />
     <Error errors={errors.nested} />
 
-    <label htmlFor="array.0.prop">Array value</label>
+    <label htmlFor={fields.array[0].prop.name()}>Array value</label>
     <input {...fields.array[0].prop.register()} type="text" />
     <Error errors={errors.array} />
 
-    <label htmlFor="number">Number</label>
+    <label htmlFor={fields.number.name()}>Number</label>
     <input {...fields.number.register()} type="number" />
     <Error errors={errors.number} />
 
-    <label htmlFor="link">Link (custom component)</label>
+    <label>Link (custom component)</label>
     <LinkField field={fields.link} />
 
     <div style={{ marginBlock: '1em', display: 'flex', gap: '.5em' }}>
       <input {...fields.condition.register()} type="checkbox" />
-      <label htmlFor="condition">Show conditional field?</label>
+      <label htmlFor={fields.condition.name()}>Show conditional field?</label>
     </div>
     <Error errors={errors.condition} />
 
     {value.condition && <>
-      <label htmlFor="conditional">Conditional field</label>
+      <label htmlFor={fields.conditional.name()}>Conditional field</label>
       <input {...fields.conditional.register()} type="text" />
       <Error errors={errors.conditional} />
     </>}

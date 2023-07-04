@@ -78,6 +78,7 @@ export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], 
 
       if (!(unwrapped instanceof z.ZodObject)) {
         if (key === 'register') return () => register(path, schema)
+        if (key === 'name') return () => path.map(p => p.key).join('.')
         throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
       }
 
