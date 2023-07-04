@@ -1,6 +1,7 @@
 import { FieldControls, RegisterFn } from '.'
 import { z } from 'zod'
 
+// Creates the type for the field chain
 type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Schema> extends Value ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? {
     [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value>
@@ -13,6 +14,7 @@ type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Sche
   : Value
 export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & recursiveFormatSchemaFields<NonNullable<Schema>, Value>
 
+/** Recursively make a nested object structure partial */
 export type RecursivePartial<T> = {
   [P in keyof T]?:
     T[P] extends (infer U)[] ? RecursivePartial<U>[] :
@@ -37,6 +39,11 @@ export type PathSegment = {
   type: 'object' | 'array'
 }
 
+/**
+ * Recursive proxy chain function.
+ *
+ * Thanks to [react-zorm](https://github.com/esamattis/react-zorm) for the inspiration.
+ */
 export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
   new Proxy(schema, {
     get: (_target, key) => {
@@ -69,6 +76,8 @@ export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], regis
     },
   }) as unknown
 
+type Obj = Record<string, unknown> | unknown[]
+
 /**
  * Fetch an object's deeply nested property using a path of keys
  * Will attempt to coerce the key to an integer if an array is encountered
@@ -100,8 +109,6 @@ export const getDeepProp = <T extends Obj>(obj: T, path: PathSegment[]): unknown
     return next
   }
 }
-
-type Obj = Record<string, unknown> | unknown[]
 
 /**
  * Mutate an object's deeply nested property

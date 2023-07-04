@@ -14,8 +14,10 @@ export type Field<T> = { _field: FieldControls<z.ZodType<T>> }
 export const useField = <T>({ _field }: Field<T>) => {
   const { schema, path, formValue, setFormValue } = _field
 
-  const value = useMemo(() => getDeepProp(formValue, path) as Partial<T> | undefined, [formValue, path.map(p => p.key).join('.')])
-  const onChange = useCallback((value: Partial<T>) => setFormValue(v => setDeepProp(v, path, value)), [formValue, path.map(p => p.key).join('.')])
+  const name = path.map(p => p.key).join('.')
+
+  const value = useMemo(() => getDeepProp(formValue, path) as Partial<T> | undefined, [formValue, name])
+  const onChange = useCallback((value: Partial<T>) => setFormValue(v => setDeepProp(v, path, value)), [formValue, name])
 
   return { schema, value, onChange }
 }
