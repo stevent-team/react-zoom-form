@@ -6,7 +6,7 @@ import dts from 'vite-plugin-dts'
 export default defineConfig({
   plugins: [
     react(),
-    dts({ insertTypesEntry: true }),
+    dts({ insertTypesEntry: true, include: 'lib/**' }),
   ],
   resolve: {
     alias: {
@@ -18,6 +18,15 @@ export default defineConfig({
       entry: resolve(__dirname, 'lib/index.ts'),
       name: 'react-zoom-form',
       fileName: 'react-zoom-form',
+    },
+    rollupOptions: {
+      external: ['react', 'zod'],
+      output: {
+        globals: {
+          react: 'React',
+          zod: 'zod',
+        }
+      }
     },
   },
   test: {
