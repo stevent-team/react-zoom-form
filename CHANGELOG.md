@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 0.0.2
+
+### Patch Changes
+
+- 97a35ee: Remove peer deps from bundle
+
 ## 0.0.1
 
 ### Patch Changes
