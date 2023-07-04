@@ -16,7 +16,7 @@ yarn add @stevent-team/fir zod
 Example usage:
 
 ```tsx
-import { useForm, useField } from '@stevent-team/fir'
+import { useForm, useField, Field } from '@stevent-team/fir'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -34,7 +34,7 @@ const schema = z.object({
 })
 
 const EditPage = () => {
-  const { fields, handleSubmit } = useForm({ schema })
+  const { fields, handleSubmit, errors } = useForm({ schema })
 
   const onSubmit = values => {
     console.log(values)
@@ -47,6 +47,7 @@ const EditPage = () => {
     <input {...fields.address.city.register()} type="text" />
     <LinkField field={fields.link} />
     <button>Save changes</button>
+    {errors._errors.length > 0 && <div>{errors._errors.map(err => err.message).join(', ')}</div>}
   </form>
 }
 

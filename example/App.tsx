@@ -9,12 +9,12 @@ const schema = z.object({
   number: z.coerce.number().min(3).max(10),
   nested: z.object({
     inside: z.object({
-      here: z.string().trim().default(''),
+      here: z.string().trim().min(1),
     }),
   }),
   array: z.array(
     z.object({
-      prop: z.string().trim(),
+      prop: z.string().trim().min(1),
     }),
   ),
   link: z.object({
@@ -25,8 +25,8 @@ const schema = z.object({
   conditional: z.string(),
 })
 
-const Error = ({ errors }: { errors: ZodIssue[] | undefined }) =>
-  errors && errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+const Error = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
+  errors._errors.length > 0 ? <span className="error">{errors._errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
 const initialValues = {
   defaultString: 'Default value',
@@ -43,49 +43,49 @@ const App = () => {
   return <form onSubmit={handleSubmit(onSubmit)}>
     <label htmlFor="requiredString">Required string</label>
     <input {...fields.requiredString.register()} type="text" />
-    <Error errors={errors?.fieldErrors.requiredString} />
+    <Error errors={errors.requiredString} />
 
     <label htmlFor="optionalString">Optional string</label>
     <input {...fields.optionalString.register()} type="text" />
-    <Error errors={errors?.fieldErrors.optionalString} />
+    <Error errors={errors.optionalString} />
 
     <label htmlFor="defaultString">Default string</label>
     <input {...fields.defaultString.register()} type="text" />
-    <Error errors={errors?.fieldErrors.defaultString} />
+    <Error errors={errors.defaultString} />
 
     <label htmlFor="nested.inside.here">Nested string</label>
     <input {...fields.nested.inside.here.register()} type="text" />
-    <Error errors={errors?.fieldErrors.nested} />
+    <Error errors={errors.nested} />
 
     <label htmlFor="array.0.prop">Array value</label>
     <input {...fields.array[0].prop.register()} type="text" />
-    <Error errors={errors?.fieldErrors.array} />
+    <Error errors={errors.array} />
 
     <label htmlFor="number">Number</label>
     <input {...fields.number.register()} type="number" />
-    <Error errors={errors?.fieldErrors.number} />
+    <Error errors={errors.number} />
 
     <label htmlFor="link">Link (custom component)</label>
     <LinkField field={fields.link} />
-    <Error errors={errors?.fieldErrors.link} />
 
     <div style={{ marginBlock: '1em', display: 'flex', gap: '.5em' }}>
       <input {...fields.condition.register()} type="checkbox" />
       <label htmlFor="condition">Show conditional field?</label>
     </div>
-    <Error errors={errors?.fieldErrors.condition} />
+    <Error errors={errors.condition} />
 
     {value.condition && <>
       <label htmlFor="conditional">Conditional field</label>
       <input {...fields.conditional.register()} type="text" />
-      <Error errors={errors?.fieldErrors.conditional} />
+      <Error errors={errors.conditional} />
     </>}
 
     <button>Save changes</button>
 
     <output>
       <div>isDirty: {isDirty ? 'true' : 'false'}</div>
-      <div>{JSON.stringify(value, null, 2)}</div>
+      <div>value: {JSON.stringify(value, null, 2)}</div>
+      <div>errors: {JSON.stringify(errors._errors, null, 2)}</div>
     </output>
   </form>
 }
@@ -96,22 +96,25 @@ interface Link {
 }
 
 const LinkField = ({ field }: { field: Field<Link> }) => {
-  const { value, onChange } = useField(field)
+  const { value, onChange, errors } = useField(field)
 
-  return <div style={{ display: 'flex', gap: '.5em' }}>
-    <input
-      type="text"
-      placeholder="Label"
-      value={value?.label ?? ''}
-      onChange={e => onChange({ ...value, label: e.currentTarget.value })}
-    />
-    <input
-      type="url"
-      placeholder="URL"
-      value={value?.url ?? ''}
-      onChange={e => onChange({ ...value, url: e.currentTarget.value })}
-    />
-  </div>
+  return <>
+    <div style={{ display: 'flex', gap: '.5em' }}>
+      <input
+        type="text"
+        placeholder="Label"
+        value={value?.label ?? ''}
+        onChange={e => onChange({ ...value, label: e.currentTarget.value })}
+      />
+      <input
+        type="url"
+        placeholder="URL"
+        value={value?.url ?? ''}
+        onChange={e => onChange({ ...value, url: e.currentTarget.value })}
+      />
+    </div>
+    {errors.length > 0 && <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span>}
+  </>
 }
 
 export default App

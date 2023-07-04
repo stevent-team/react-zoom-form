@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ZodIssue, ZodType, z } from 'zod'
+import { z } from 'zod'
 
-import { PathSegment, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox } from './utils'
+import { PathSegment, RecursivePartial, fieldChain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox, FormatSchemaErrors, errorChain } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -12,7 +12,7 @@ export interface UseFormOptions<Schema extends z.AnyZodObject> {
 
 export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
 
-export type RegisterFn = (path: PathSegment[], schema: ZodType) => {
+export type RegisterFn = (path: PathSegment[], schema: z.ZodType) => {
   onChange: React.ChangeEventHandler<any>
   ref: React.LegacyRef<any>
   name: string
@@ -26,7 +26,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
   initialValues = {},
 }: UseFormOptions<Schema>) => {
   const [formValue, setFormValue] = useState(structuredClone(initialValues))
-  const [errors, setErrors] = useState<z.inferFlattenedErrors<Schema, ZodIssue>>()
+  const [formErrors, setFormErrors] = useState<z.ZodError<z.infer<Schema>>>()
   const fieldRefs = useRef<Record<string, { path: PathSegment[], ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement }>>({})
 
   // Whether or not to validate fields when anything changes
@@ -45,10 +45,10 @@ export const useForm = <Schema extends z.AnyZodObject>({
   const validate = useCallback(async () => {
     const parsed = await schema.safeParseAsync(formValue)
     if (parsed.success) {
-      setErrors(undefined)
+      setFormErrors(undefined)
       return parsed.data
     } else {
-      setErrors(parsed.error.flatten(issue => issue))
+      setFormErrors(parsed.error)
     }
   }, [schema, formValue])
 
@@ -105,7 +105,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
   }, [formValue])
 
   const fields = useMemo(() => new Proxy(schema.shape, {
-    get: (_target, key) => chain(schema, [], register, { formValue, setFormValue })[key]
+    get: (_target, key) => fieldChain(schema, [], register, { formValue, setFormValue, formErrors })[key]
   }) as FormatSchemaFields<Schema, {
     /**
      * Provides props to pass to native elements (input, textarea, select)
@@ -114,7 +114,11 @@ export const useForm = <Schema extends z.AnyZodObject>({
      * <input type="text" {...fields.firstName.register()} />
      */
     register: () => ReturnType<RegisterFn>
-  }>, [schema, register])
+  }>, [schema, register, formValue, formErrors])
+
+  const errors = useMemo(() => new Proxy(schema.shape, {
+    get: (_target, key) => errorChain(schema, [], formErrors)[key]
+  }) as FormatSchemaErrors<z.infer<Schema>>, [schema, formErrors])
 
   return {
     /** Access zod schema and registration functions for your fields. */

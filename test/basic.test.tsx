@@ -9,18 +9,18 @@ const schema = z.object({
   familyName: z.string().min(1, 'Field is required').default(''),
 })
 
-const FormError = ({ errors }: { errors: ZodIssue[] | undefined }) =>
-  errors && errors.length > 0 ? <span className="error" role="alert">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+const FormError = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
+  errors._errors.length > 0 ? <span className="error" role="alert">{errors._errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
 const BasicForm = ({ onSubmit }: { onSubmit: SubmitHandler<typeof schema> }) => {
   const { fields, handleSubmit, errors } = useForm({ schema })
 
   return <form onSubmit={handleSubmit(onSubmit)}>
     <input {...fields.givenName.register()} type="text" placeholder="givenName" />
-    <FormError errors={errors?.fieldErrors.givenName} />
+    <FormError errors={errors.givenName} />
 
     <input {...fields.familyName.register()} type="text" placeholder="familyName" />
-    <FormError errors={errors?.fieldErrors.familyName} />
+    <FormError errors={errors.familyName} />
 
     <button type="submit">Submit</button>
   </form>

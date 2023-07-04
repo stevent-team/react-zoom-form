@@ -52,3 +52,7 @@ output {
   font-family: monospace;
   white-space: pre;
 }
+
+output div {
+  margin-block: .5em;
+}

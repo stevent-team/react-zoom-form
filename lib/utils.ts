@@ -14,6 +14,16 @@ type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Sche
   : Value
 export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & recursiveFormatSchemaFields<NonNullable<Schema>, Value>
 
+// Creates the type for the error chain
+type recursiveFormatSchemaErrors<TSchema> = TSchema extends [any, ...any[]] ? {
+    [K in keyof TSchema]: FormatSchemaErrors<TSchema[K]>
+  } : TSchema extends any[] ? {
+    [k: number]: FormatSchemaErrors<TSchema[number]>
+  } : TSchema extends object ? {
+    [K in keyof TSchema]: FormatSchemaErrors<TSchema[K]>
+  } : unknown
+export type FormatSchemaErrors<TSchema> = { _errors: z.ZodIssue[] } & recursiveFormatSchemaErrors<NonNullable<TSchema>>
+
 /** Recursively make a nested object structure partial */
 export type RecursivePartial<T> = {
   [P in keyof T]?:
@@ -34,17 +44,17 @@ export const unwrapZodType = (type: z.ZodType): z.ZodType => {
 }
 
 export type PathSegment = {
-  /** If type is array, key should be castable to a number */
-  key: string
+  /** If type is array, key should be coercable to a number */
+  key: string | number
   type: 'object' | 'array'
 }
 
 /**
- * Recursive proxy chain function.
+ * Recursive proxy field chain function.
  *
  * Thanks to [react-zorm](https://github.com/esamattis/react-zorm) for the inspiration.
  */
-export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
+export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
   new Proxy(schema, {
     get: (_target, key) => {
       if (typeof key !== 'string') {
@@ -55,8 +65,7 @@ export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], regis
         return {
           schema,
           path,
-          formValue: controls.formValue,
-          setFormValue: controls.setFormValue,
+          ...controls,
         } satisfies FieldControls<z.ZodTypeAny>
       }
 
@@ -64,7 +73,7 @@ export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], regis
 
       // Support arrays
       if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
-        return chain(unwrapped._def.type, [...path, { key, type: 'array' }], register, controls)
+        return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, controls)
       }
 
       if (!(unwrapped instanceof z.ZodObject)) {
@@ -72,7 +81,33 @@ export const chain = <S extends z.ZodType>(schema: S, path: PathSegment[], regis
         throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
       }
 
-      return chain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, controls)
+      return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, controls)
+    },
+  }) as unknown
+
+export const errorChain = <S extends z.ZodType>(schema: S, path: PathSegment[], error?: z.ZodError<z.infer<S>>): any =>
+  new Proxy(schema, {
+    get: (_target, key) => {
+      if (typeof key !== 'string') {
+        throw new Error(`${String(key)} must be a string`)
+      }
+
+      if (key === '_errors') {
+        return error?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
+      }
+
+      const unwrapped = unwrapZodType(schema)
+
+      // Support arrays
+      if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
+        return errorChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], error)
+      }
+
+      if (!(unwrapped instanceof z.ZodObject)) {
+        throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
+      }
+
+      return errorChain(unwrapped.shape[key], [...path, { key, type: 'object' }], error)
     },
   }) as unknown
 
@@ -91,7 +126,7 @@ export const getDeepProp = <T extends Obj>(obj: T, path: PathSegment[]): unknown
 
   // Is the current value an array? Can we coerce the key to a number?
   if (Array.isArray(obj) && head.type === 'array') {
-    const key = parseInt(head.key)
+    const key = Number(head.key)
     if (!isNaN(key)) {
       return getDeepProp<T>(obj[key] as T, tail)
     } else {
@@ -126,7 +161,7 @@ export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj 
   if (tail.length === 0) {
     // Is the object at this depth an array?
     if (Array.isArray(obj) && head.type === 'array') {
-      const key = parseInt(head.key)
+      const key = Number(head.key)
       if (!isNaN(key)) {
         obj[key] = value
         return obj
@@ -141,7 +176,7 @@ export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj 
   // Is the object at this depth an array?
   if (Array.isArray(obj) && head.type === 'array') {
     // Attempt to coerce next key as a number
-    const key = parseInt(head.key)
+    const key = Number(head.key)
     if (!isNaN(key)) {
       obj[key] = setDeepProp(obj[key] as Obj, tail, value)
       return obj
@@ -166,6 +201,18 @@ export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj 
     ...obj,
     [head.key]: setDeepProp(obj[head.key as keyof Obj] as Obj, tail, value)
   }
+}
+
+export const arrayStartsWith = (array1: Array<string | number>, array2: Array<string | number>) => {
+  if (array1.length < array2.length) return false
+
+  for (let i = 0; i < array2.length; i++) {
+    if (array1[i] !== array2[i]) {
+      return false
+    }
+  }
+
+  return true
 }
 
 type Primitive = null | undefined | string | number | boolean | symbol | bigint
