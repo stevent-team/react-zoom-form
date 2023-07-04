@@ -115,7 +115,7 @@ export const getDeepProp = <T extends Obj>(obj: T, path: PathSegment[]): unknown
  * Will respect existing arrays and coerce keys to integers when applicable
  * Cannot currently create new arrays when keys are integer. Unsure if this is wanted.
  **/
-export const setDeepProp = <T extends Obj>(obj: T, path: PathSegment[], value: unknown): T => {
+export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj => {
   // Finished recursing and didn't set?
   if (path.length === 0) throw new Error('Empty path')
 
@@ -134,7 +134,7 @@ export const setDeepProp = <T extends Obj>(obj: T, path: PathSegment[], value: u
         throw new Error('Object at current depth is an array but the key is not an integer')
       }
     } else {
-      return {...obj, [head.key as keyof T]: value as T[keyof T] }
+      return {...obj, [head.key]: value }
     }
   }
 
@@ -143,7 +143,7 @@ export const setDeepProp = <T extends Obj>(obj: T, path: PathSegment[], value: u
     // Attempt to coerce next key as a number
     const key = parseInt(head.key)
     if (!isNaN(key)) {
-      obj[key] = setDeepProp(obj[key as keyof T] as T, tail, value)
+      obj[key] = setDeepProp(obj[key] as Obj, tail, value)
       return obj
     } else {
       throw new Error('Object at current depth is an array but the key is not an integer')
@@ -152,18 +152,19 @@ export const setDeepProp = <T extends Obj>(obj: T, path: PathSegment[], value: u
 
   // Is there nothing at this point?
   // Create an object for us to continue traversing into
-  if (obj[head.key as keyof T] === undefined) {
+  if (obj[head.key as keyof Obj] === undefined) {
     // If type of path segment is an array, create an empty array
-    obj[head.key as keyof T] = tail[0].type === 'array' ? [] : {}
+    (obj as Record<string, unknown>)[head.key] = tail[0].type === 'array' ? [] : {}
   }
 
   // Is this value primitive? We can't traverse that so error
-  if (typeof obj[head.key as keyof T] !== 'object') throw new Error(`Can't traverse primitive: ${obj[head.key as keyof T]}`)
+  if (typeof obj[head.key as keyof Obj] !== 'object')
+    throw new Error(`Can't traverse primitive: ${obj[head.key as keyof Obj]}`)
 
   // Recurse into this object
   return {
     ...obj,
-    [head.key]: setDeepProp(obj[head.key as keyof T] as T, tail, value)
+    [head.key]: setDeepProp(obj[head.key as keyof Obj] as Obj, tail, value)
   }
 }
 
