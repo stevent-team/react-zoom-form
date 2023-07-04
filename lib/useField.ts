@@ -17,7 +17,7 @@ export const useField = <T>({ _field }: Field<T>) => {
   const name = path.map(p => p.key).join('.')
 
   const value = useMemo(() => getDeepProp(formValue, path) as Partial<T> | undefined, [formValue, name])
-  const onChange = useCallback((value: Partial<T>) => setFormValue(v => setDeepProp(v, path, value)), [formValue, name])
+  const onChange = useCallback((value: Partial<T>) => setFormValue(v => setDeepProp(v, path, value) as typeof v), [formValue, name])
 
   return { schema, value, onChange }
 }

@@ -90,7 +90,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
         if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
           newValue = e.currentTarget.checked
         }
-        setFormValue(v => setDeepProp(v, path, newValue))
+        setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
       },
       name,
       id: name,
