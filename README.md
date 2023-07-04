@@ -78,6 +78,12 @@ const LinkField = ({ field }: { field: Field<Link> }) => {
 }
 ```
 
+## Contributing
+
+You can install dependencies by running `yarn` after cloning this repo, and `yarn dev` to start the example.
+
+This library uses [changesets](https://github.com/changesets/changesets), if the changes you've made would constitute a version bump, run `yarn changeset` and follow the prompts to document the changes you've made. Changesets are consumed on releases, and used to generate a changelog and bump version number.
+
 ## License
 
 Created by Stevent and licensed under MIT
