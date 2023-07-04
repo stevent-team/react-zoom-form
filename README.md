@@ -1,22 +1,25 @@
-# 🌲 Fir - Forms in React
+# 🌲 React Zoom Form
+
+[![npm version](https://img.shields.io/npm/v/@stevent-team/react-zoom-form)](https://www.npmjs.com/package/@stevent-team/react-zoom-form)
+[![minzip size](https://img.shields.io/bundlephobia/minzip/@stevent-team/react-zoom-form)](https://bundlephobia.com/package/@stevent-team/react-zoom-form)
 
 > **Warning**<br>
-> Fir is in alpha, and the API may change entirely within minor releases. Please use at your own risk.
+> React Zoom Form is in alpha, and the API may change entirely within minor releases. Please use at your own risk.
 
 Typescript-first, hook-based forms using React, powered by [Zod](https://github.com/colinhacks/zod). Inspired by [react-hook-form](https://github.com/react-hook-form/react-hook-form) and [react-zorm](https://github.com/esamattis/react-zorm).
 
 ## Usage
 
-Install `fir` and `zod`
+Install `react-zoom-form` and `zod`
 
 ```bash
-yarn add @stevent-team/fir zod
+yarn add @stevent-team/react-zoom-form zod
 ```
 
 Example usage:
 
 ```tsx
-import { useForm, useField, Field } from '@stevent-team/fir'
+import { useForm, useField, Field } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form

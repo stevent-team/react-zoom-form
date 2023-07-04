@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ZodIssue, z } from 'zod'
-import { SubmitHandler, useForm } from '@stevent-team/fir'
+import { SubmitHandler, useForm } from '@stevent-team/react-zoom-form'
 import userEvent from '@testing-library/user-event'
 
 const schema = z.object({

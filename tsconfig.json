@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "paths": {
-      "@stevent-team/fir": ["./lib/index.ts"] // Allows importing library from realistic path in demo
+      "@stevent-team/react-zoom-form": ["./lib/index.ts"] // Allows importing library from realistic path in demo
     },
     "target": "ESNext",
     "jsx": "react-jsx",

@@ -1,15 +1,15 @@
 {
-  "name": "@stevent-team/fir",
+  "name": "@stevent-team/react-zoom-form",
   "version": "0.0.1",
-  "description": "Forms in React",
+  "description": "React forms powered by Zod",
   "keywords": [
     "react",
     "hooks",
-    "fir",
+    "zoom",
     "forms",
     "zod"
   ],
-  "repository": "https://github.com/stevent-team/fir",
+  "repository": "https://github.com/stevent-team/react-zoom-form",
   "author": "Stevent Team (https://stevent.club)",
   "license": "MIT",
   "scripts": {
@@ -22,13 +22,13 @@
   "files": [
     "dist"
   ],
-  "module": "./dist/fir.js",
-  "main": "./dist/fir.umd.cjs",
-  "types": "./dist/fir.d.ts",
+  "module": "./dist/react-zoom-form.js",
+  "main": "./dist/react-zoom-form.umd.cjs",
+  "types": "./dist/react-zoom-form.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/fir.js",
-      "require": "./dist/fir.umd.cjs"
+      "import": "./dist/react-zoom-form.js",
+      "require": "./dist/react-zoom-form.umd.cjs"
     }
   },
   "peerDependencies": {

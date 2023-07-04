@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm, Field, useField } from '@stevent-team/fir'
+import { SubmitHandler, useForm, Field, useField } from '@stevent-team/react-zoom-form'
 import { ZodIssue, z } from 'zod'
 
 // Define the structure and validation of your form

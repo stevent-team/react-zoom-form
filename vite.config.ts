@@ -10,14 +10,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@stevent-team/fir': resolve(__dirname, 'lib/index.ts')
+      '@stevent-team/react-zoom-form': resolve(__dirname, 'lib/index.ts')
     }
   },
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
-      name: 'fir',
-      fileName: 'fir',
+      name: 'react-zoom-form',
+      fileName: 'react-zoom-form',
     },
   },
   test: {
