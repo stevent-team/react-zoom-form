@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - '**/package.json'
+      - '.changeset/**'
+      - '.github/workflows/release.yml'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - uses: changesets/action@v1
+      with:
+        publish: yarn ci:release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

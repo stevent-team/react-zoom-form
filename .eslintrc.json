@@ -2,6 +2,9 @@
   "extends": ["plugin:@typescript-eslint/recommended", "plugin:react/recommended"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["react", "@typescript-eslint"],
+  "settings": {
+    "react": { "version": "detect" }
+  },
   "rules": {
     "comma-spacing": "warn",
     "react/display-name": "off",

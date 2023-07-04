@@ -1,0 +1,42 @@
+name: Check
+
+on:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - '.eslintrc.json'
+      - 'tsconfig.json'
+      - '.github/workflows/check.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - run: yarn lint
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - run: yarn tsc
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - run: yarn test
