@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ZodIssue, ZodType, z } from 'zod'
 
-import { PathSegment, FormatSchema, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields } from './utils'
+import { PathSegment, RecursivePartial, chain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -13,7 +13,6 @@ export interface UseFormOptions<Schema extends z.AnyZodObject> {
 export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
 
 export type RegisterFn = (path: PathSegment[], schema: ZodType) => {
-  value: string
   onChange: React.ChangeEventHandler<any>
   ref: React.LegacyRef<any>
   name: string
@@ -28,7 +27,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
 }: UseFormOptions<Schema>) => {
   const [formValue, setFormValue] = useState(structuredClone(initialValues))
   const [errors, setErrors] = useState<z.inferFlattenedErrors<Schema, ZodIssue>>()
-  const fieldRefs = useRef<Partial<FormatSchema<z.infer<Schema>, HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined>>>({})
+  const fieldRefs = useRef<Record<string, { path: PathSegment[], ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement }>>({})
 
   // Whether or not to validate fields when anything changes
   const [validateOnChange, setValidateOnChange] = useState(false)
@@ -56,6 +55,16 @@ export const useForm = <Schema extends z.AnyZodObject>({
   // Watch for changes in value
   useEffect(() => {
     if (validateOnChange) validate()
+
+    // Set registered field values
+    Object.values(fieldRefs.current).map(({ path, ref }) => {
+      const value = getDeepProp(formValue, path) as string | boolean | undefined
+      if (isCheckbox(ref)) {
+        ref.checked = Boolean(value)
+      } else {
+        ref.value = String(value ?? '')
+      }
+    })
   }, [formValue, validateOnChange, validate])
 
   // Submit handler
@@ -68,20 +77,32 @@ export const useForm = <Schema extends z.AnyZodObject>({
   }, [validate])
 
   // Register for native elements (input, textarea, select)
-  const register: RegisterFn = (path, fieldSchema) => useMemo(() => (
-    {
-      value: String(getDeepProp(formValue, path) ?? ''),
+  const register = useCallback<RegisterFn>((path, fieldSchema) => {
+    const name = path.map(p => p.key).join('.')
+    const unwrapped = unwrapZodType(fieldSchema)
+
+    return {
       onChange: e => {
-        let newValue: string | undefined = e.currentTarget.value
-        if (!(unwrapZodType(fieldSchema) instanceof z.ZodString) && newValue === '') {
+        let newValue: string | boolean | undefined = e.currentTarget.value
+        if (!(unwrapped instanceof z.ZodString) && newValue === '') {
           newValue = undefined
+        }
+        if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
+          newValue = e.currentTarget.checked
         }
         setFormValue(v => setDeepProp(v, path, newValue))
       },
-      name: path.map(p => p.key).join('.'),
-      ref: r => fieldRefs.current = setDeepProp(fieldRefs.current, path, r),
+      name,
+      id: name,
+      ref: ref => {
+        if (ref) {
+          fieldRefs.current[name] = { path, ref }
+        } else {
+          delete fieldRefs.current[name]
+        }
+      },
     } satisfies React.ComponentProps<'input'>
-  ), [path.map(p => p.key).join('.'), getDeepProp(formValue, path)])
+  }, [formValue])
 
   const fields = useMemo(() => new Proxy(schema.shape, {
     get: (_target, key) => chain(schema, [], register, { formValue, setFormValue })[key]
@@ -112,5 +133,6 @@ export const useForm = <Schema extends z.AnyZodObject>({
     isDirty,
     /** Reset the form with provided values, or with initialValues if nothing is passed. */
     reset,
+    value: formValue,
   }
 }

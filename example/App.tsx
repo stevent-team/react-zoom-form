@@ -14,13 +14,15 @@ const schema = z.object({
   }),
   array: z.array(
     z.object({
-      prop: z.string().trim().default(''),
+      prop: z.string().trim(),
     }),
   ),
   link: z.object({
     label: z.string(),
     url: z.string().url(),
   }).default({ label: 'default from zod', url: 'https://example.com' }),
+  condition: z.boolean(),
+  conditional: z.string(),
 })
 
 const Error = ({ errors }: { errors: ZodIssue[] | undefined }) =>
@@ -31,7 +33,7 @@ const initialValues = {
 }
 
 const App = () => {
-  const { fields, handleSubmit, errors, isDirty, reset } = useForm({ schema, initialValues })
+  const { fields, handleSubmit, errors, isDirty, reset, value } = useForm({ schema, initialValues })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
@@ -67,10 +69,23 @@ const App = () => {
     <LinkField field={fields.link} />
     <Error errors={errors?.fieldErrors.link} />
 
+    <div style={{ marginBlock: '1em', display: 'flex', gap: '.5em' }}>
+      <input {...fields.condition.register()} type="checkbox" />
+      <label htmlFor="condition">Show conditional field?</label>
+    </div>
+    <Error errors={errors?.fieldErrors.condition} />
+
+    {value.condition && <>
+      <label htmlFor="conditional">Conditional field</label>
+      <input {...fields.conditional.register()} type="text" />
+      <Error errors={errors?.fieldErrors.conditional} />
+    </>}
+
     <button>Save changes</button>
 
     <output>
-      <span>isDirty: {isDirty ? 'true' : 'false'}</span>
+      <div>isDirty: {isDirty ? 'true' : 'false'}</div>
+      <div>{JSON.stringify(value, null, 2)}</div>
     </output>
   </form>
 }

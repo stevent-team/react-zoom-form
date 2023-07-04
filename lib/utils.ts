@@ -1,16 +1,6 @@
 import { FieldControls, RegisterFn } from '.'
 import { z } from 'zod'
 
-type recursiveFormatSchema<TSchema, Value, Union> = TSchema extends Value ? TSchema
-  : TSchema extends [any, ...any[]] ? {
-    [K in keyof TSchema]: FormatSchema<TSchema[K], Value, Union>
-  } : TSchema extends any[] ? {
-    [k: number]: FormatSchema<TSchema[number], Value, Union>
-  } : TSchema extends object ? {
-    [K in keyof TSchema]: FormatSchema<TSchema[K], Value, Union>
-  } : Value
-export type FormatSchema<TSchema, Value, Union = unknown> = Union & recursiveFormatSchema<NonNullable<TSchema>, Value, Union>
-
 type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Schema> extends Value ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? {
     [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value>
@@ -204,3 +194,7 @@ export const deepEqual = (object1: any, object2: any) => {
 
   return true
 }
+
+/** Check if an element is a checkbox */
+export const isCheckbox = (element: HTMLElement): element is HTMLInputElement =>
+  element.tagName.toLowerCase() === 'input' && (element as HTMLInputElement).type?.toLowerCase() === 'checkbox'

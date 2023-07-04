@@ -18,12 +18,12 @@ form {
   min-width: 300px;
 }
 
-label {
+form > label {
   display: block;
   margin-block: 1em .2em;
 }
 
-input, textarea, select {
+input:not([type=checkbox]), textarea, select {
   font: inherit;
   padding: .4em .5em;
   width: 100%;
