@@ -55,7 +55,7 @@ export type PathSegment = {
  * Thanks to [react-zorm](https://github.com/esamattis/react-zorm) for the inspiration.
  */
 export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
-  new Proxy(schema, {
+  new Proxy({}, {
     get: (_target, key) => {
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
@@ -87,7 +87,7 @@ export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], 
   }) as unknown
 
 export const errorChain = <S extends z.ZodType>(schema: S, path: PathSegment[], error?: z.ZodError<z.infer<S>>): any =>
-  new Proxy(schema, {
+  new Proxy({}, {
     get: (_target, key) => {
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
