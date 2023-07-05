@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 0.0.3
+
+### Patch Changes
+
+- 721abd5: Always init Proxy with object
+
 ## 0.0.2
 
 ### Patch Changes
