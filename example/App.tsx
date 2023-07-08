@@ -23,6 +23,7 @@ const schema = z.object({
   }).default({ label: 'default from zod', url: 'https://example.com' }),
   condition: z.boolean(),
   conditional: z.string(),
+  radio: z.enum(['option1', 'option2', 'option3']),
 })
 
 const Error = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
@@ -42,43 +43,58 @@ const App = () => {
 
   return <form onSubmit={handleSubmit(onSubmit)}>
     <label htmlFor={fields.requiredString.name()}>Required string</label>
-    <input {...fields.requiredString.register()} type="text" />
+    <input {...fields.requiredString.register()} id={fields.requiredString.name()} type="text" />
     <Error errors={errors.requiredString} />
 
     <label htmlFor={fields.optionalString.name()}>Optional string</label>
-    <input {...fields.optionalString.register()} type="text" />
+    <input {...fields.optionalString.register()} id={fields.optionalString.name()} type="text" />
     <Error errors={errors.optionalString} />
 
     <label htmlFor={fields.defaultString.name()}>Default string</label>
-    <input {...fields.defaultString.register()} type="text" />
+    <input {...fields.defaultString.register()} id={fields.defaultString.name()} type="text" />
     <Error errors={errors.defaultString} />
 
     <label htmlFor={fields.nested.inside.here.name()}>Nested string</label>
-    <input {...fields.nested.inside.here.register()} type="text" />
+    <input {...fields.nested.inside.here.register()} id={fields.nested.inside.here.name()} type="text" />
     <Error errors={errors.nested} />
 
     <label htmlFor={fields.array[0].prop.name()}>Array value</label>
-    <input {...fields.array[0].prop.register()} type="text" />
+    <input {...fields.array[0].prop.register()} id={fields.array[0].prop.name()} type="text" />
     <Error errors={errors.array} />
 
     <label htmlFor={fields.number.name()}>Number</label>
-    <input {...fields.number.register()} type="number" />
+    <input {...fields.number.register()} id={fields.number.name()} type="number" />
     <Error errors={errors.number} />
 
     <label>Link (custom component)</label>
     <LinkField field={fields.link} />
 
-    <div style={{ marginBlock: '1em', display: 'flex', gap: '.5em' }}>
+    <label style={{ marginBlock: '1em' }}>
       <input {...fields.condition.register()} type="checkbox" />
-      <label htmlFor={fields.condition.name()}>Show conditional field?</label>
-    </div>
+      <span>Show conditional field?</span>
+    </label>
     <Error errors={errors.condition} />
 
     {value.condition && <>
       <label htmlFor={fields.conditional.name()}>Conditional field</label>
-      <input {...fields.conditional.register()} type="text" />
+      <input {...fields.conditional.register()} id={fields.conditional.name()} type="text" />
       <Error errors={errors.conditional} />
     </>}
+
+    <label>Radio field</label>
+    <label>
+      <input {...fields.radio.register()} value="option1" type="radio" />
+      <span>Option 1</span>
+    </label>
+    <label>
+      <input {...fields.radio.register()} value="option2" type="radio" />
+      <span>Option 2</span>
+    </label>
+    <label>
+      <input {...fields.radio.register()} value="option3" type="radio" />
+      <span>Option 3</span>
+    </label>
+    <Error errors={errors.radio} />
 
     <button>Save changes</button>
 
