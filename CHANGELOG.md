@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 0.2.1
+
+### Patch Changes
+
+- f889c10: Don't apply Partial to custom field if type is an array
+
 ## 0.2.0
 
 ### Minor Changes
