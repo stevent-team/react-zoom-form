@@ -57,6 +57,10 @@ export type PathSegment = {
 export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
   new Proxy({}, {
     get: (_target, key) => {
+      if (key === Symbol.toStringTag) return schema.toString()
+      if (key === Symbol.toPrimitive) return () => schema.toString()
+      if (typeof key === 'symbol') return schema
+
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
       }
@@ -89,6 +93,10 @@ export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], 
 export const errorChain = <S extends z.ZodType>(schema: S, path: PathSegment[], error?: z.ZodError<z.infer<S>>): any =>
   new Proxy({}, {
     get: (_target, key) => {
+      if (key === Symbol.toStringTag) return schema.toString()
+      if (key === Symbol.toPrimitive) return () => schema.toString()
+      if (typeof key === 'symbol') return schema
+
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
       }
