@@ -16,24 +16,20 @@ Install `react-zoom-form` and `zod`
 yarn add @stevent-team/react-zoom-form zod
 ```
 
-Example usage:
+### Basic Example
 
 ```tsx
-import { useForm, controlled, Field } from '@stevent-team/react-zoom-form'
+import { useForm } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
-  name: z.string().min(1, 'This field is required').default(''),
+  name: z.string().min(1, 'This field is required'),
   age: z.coerce.number().min(13),
   address: z.object({
-    street: z.string().default(''),
-    city: z.string().default(''),
+    street: z.string(),
+    city: z.string(),
   }),
-  link: z.object({
-    label: z.string(),
-    url: z.string().url(),
-  }).default({ label: '', url: '' }),
 })
 
 const EditPage = () => {
@@ -48,9 +44,78 @@ const EditPage = () => {
     <input {...fields.age.register()} type="number" />
     <input {...fields.address.street.register()} type="text" />
     <input {...fields.address.city.register()} type="text" />
-    <LinkField field={controlled(fields.link)} />
     <button>Save changes</button>
     {errors._errors.length > 0 && <div>{errors._errors.map(err => err.message).join(', ')}</div>}
+  </form>
+}
+```
+
+### Error Handling
+
+```ts
+import { useForm } from '@stevent-team/react-zoom-form'
+import { z } from 'zod'
+
+// Define the structure and validation of your form
+const schema = z.object({
+  name: z.string().min(1, 'This field is required'),
+  age: z.coerce.number().min(13),
+})
+
+// Display comma separated error messages
+const Error = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
+  errors._errors.length > 0 ? <span className="error">{errors._errors.map(e => e.message).join(', ')}</span> : null
+
+const EditPage = () => {
+  const { fields, handleSubmit, errors } = useForm({ schema })
+
+  const onSubmit = values => {
+    console.log(values)
+  }
+
+  return <form onSubmit={handleSubmit(onSubmit)}>
+    <label htmlFor={field.name.name()}>Name</label>
+    <input {...fields.name.register()} id={field.name.name()} type="text" />
+    <Error errors={errors.name} />
+
+    <label htmlFor={field.age.name()}>Name</label>
+    <input {...fields.age.register()} id={field.age.name()} type="number" />
+    <Error errors={errors.age} />
+
+    <button>Save changes</button>
+  </form>
+}
+```
+
+### Custom Fields
+
+```ts
+import { useForm, controlled, Field } from '@stevent-team/react-zoom-form'
+import { z } from 'zod'
+
+// Define the structure and validation of your form
+const schema = z.object({
+  link: z.object({
+    label: z.string(),
+    url: z.string().url(),
+  }),
+})
+
+const EditPage = () => {
+  const { fields, handleSubmit } = useForm({
+    schema,
+    initialValues: {
+      link: { label: '', url: '' },
+    },
+  })
+
+  const onSubmit = values => {
+    console.log(values)
+  }
+
+  return <form onSubmit={handleSubmit(onSubmit)}>
+    <LinkField field={controlled(fields.link)} />
+    <button>Save changes</button>
   </form>
 }
 
