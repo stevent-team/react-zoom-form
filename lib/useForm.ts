@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 
-import { PathSegment, RecursivePartial, fieldChain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox, FormatSchemaErrors, errorChain } from './utils'
+import { PathSegment, RecursivePartial, fieldChain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox, FormatSchemaErrors, errorChain, isRadio } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -57,9 +57,15 @@ export const useForm = <Schema extends z.AnyZodObject>({
     if (validateOnChange) validate()
 
     // Set registered field values
-    Object.values(fieldRefs.current).map(({ path, ref }) => {
+    Object.values(fieldRefs.current).forEach(({ path, ref }) => {
       const value = getDeepProp(formValue, path) as string | boolean | undefined
-      if (isCheckbox(ref)) {
+      if (isRadio(ref)) {
+        if (ref.value === value) {
+          ref.checked = true
+        } else {
+          ref.checked = false
+        }
+      } else if (isCheckbox(ref)) {
         ref.checked = Boolean(value)
       } else {
         ref.value = String(value ?? '')
@@ -93,10 +99,10 @@ export const useForm = <Schema extends z.AnyZodObject>({
         setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
       },
       name,
-      id: name,
       ref: ref => {
         if (ref) {
-          fieldRefs.current[name] = { path, ref }
+          const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
+          fieldRefs.current[refIndex] = { path, ref }
         } else {
           delete fieldRefs.current[name]
         }

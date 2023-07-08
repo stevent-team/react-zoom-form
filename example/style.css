@@ -19,11 +19,12 @@ form {
 }
 
 form > label {
-  display: block;
+  display: flex;
+  gap: .5em;
   margin-block: 1em .2em;
 }
 
-input:not([type=checkbox]), textarea, select {
+input:not([type=checkbox]):not([type=radio]), textarea, select {
   font: inherit;
   padding: .4em .5em;
   width: 100%;

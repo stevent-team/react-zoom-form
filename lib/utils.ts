@@ -254,3 +254,7 @@ export const deepEqual = (object1: any, object2: any) => {
 /** Check if an element is a checkbox */
 export const isCheckbox = (element: HTMLElement): element is HTMLInputElement =>
   element.tagName.toLowerCase() === 'input' && (element as HTMLInputElement).type?.toLowerCase() === 'checkbox'
+
+/** Check if an element is a radio input */
+export const isRadio = (element: HTMLElement): element is HTMLInputElement =>
+  element.tagName.toLowerCase() === 'input' && (element as HTMLInputElement).type?.toLowerCase() === 'radio'
