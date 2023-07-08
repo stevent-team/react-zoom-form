@@ -9,6 +9,8 @@ export type FieldControls<Schema extends z.ZodType> = {
   formErrors: z.ZodError<z.infer<Schema>> | undefined
 }
 
+type PartialObject<T> = T extends any[] ? T : Partial<T>
+
 export type Field<T> = {
   /**
    * The name of this field.
@@ -20,9 +22,9 @@ export type Field<T> = {
   /** The zod schema for this field. */
   schema: z.ZodType<T>
   /** Reactive value of this field. */
-  value: Partial<T> | undefined
+  value: PartialObject<T> | undefined
   /** Takes a new value to set `value` of this field. */
-  onChange: (value: Partial<T> | undefined) => void
+  onChange: (value: PartialObject<T> | undefined) => void
   /** Array of ZodIssues for this field. */
   errors: z.ZodIssue[]
 }
@@ -35,18 +37,11 @@ export type Field<T> = {
 export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<T>> }): Field<T> => {
   const { schema, path, formValue, setFormValue, formErrors } = _field
 
-  const name = path.map(p => p.key).join('.')
-
-  const value = getDeepProp(formValue, path) as Partial<T> | undefined
-  const onChange = (value: Partial<T> | undefined) => setFormValue(v => setDeepProp(v, path, value) as typeof v)
-
-  const errors = formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
-
   return {
-    name,
     schema,
-    value,
-    onChange,
-    errors,
+    name: path.map(p => p.key).join('.'),
+    value: getDeepProp(formValue, path) as PartialObject<T> | undefined,
+    onChange: value => setFormValue(v => setDeepProp(v, path, value) as typeof v),
+    errors: formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? [],
   }
 }
