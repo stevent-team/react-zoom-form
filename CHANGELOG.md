@@ -1,5 +1,15 @@
 # @stevent-team/react-zoom-form
 
+## 0.1.0
+
+### Minor Changes
+
+- 1b854ed: Add support for radio fields
+
+### Patch Changes
+
+- 7f71035: Allow symbol access to proxies for introspection
+
 ## 0.0.3
 
 ### Patch Changes
