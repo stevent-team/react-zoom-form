@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm, Field, useField } from '@stevent-team/react-zoom-form'
+import { SubmitHandler, useForm, Field, controlled } from '@stevent-team/react-zoom-form'
 import { ZodIssue, z } from 'zod'
 
 // Define the structure and validation of your form
@@ -67,7 +67,7 @@ const App = () => {
     <Error errors={errors.number} />
 
     <label>Link (custom component)</label>
-    <LinkField field={fields.link} />
+    <LinkField field={controlled(fields.link)} />
 
     <label style={{ marginBlock: '1em' }}>
       <input {...fields.condition.register()} type="checkbox" />
@@ -112,7 +112,7 @@ interface Link {
 }
 
 const LinkField = ({ field }: { field: Field<Link> }) => {
-  const { value, onChange, errors } = useField(field)
+  const { value, onChange, errors } = field
 
   return <>
     <div style={{ display: 'flex', gap: '.5em' }}>

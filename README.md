@@ -1,4 +1,4 @@
-# 🌲 React Zoom Form
+# 🏎️ React Zoom Form
 
 [![npm version](https://img.shields.io/npm/v/@stevent-team/react-zoom-form)](https://www.npmjs.com/package/@stevent-team/react-zoom-form)
 [![minzip size](https://img.shields.io/bundlephobia/minzip/@stevent-team/react-zoom-form)](https://bundlephobia.com/package/@stevent-team/react-zoom-form)
@@ -19,7 +19,7 @@ yarn add @stevent-team/react-zoom-form zod
 Example usage:
 
 ```tsx
-import { useForm, useField, Field } from '@stevent-team/react-zoom-form'
+import { useForm, controlled, Field } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -48,7 +48,7 @@ const EditPage = () => {
     <input {...fields.age.register()} type="number" />
     <input {...fields.address.street.register()} type="text" />
     <input {...fields.address.city.register()} type="text" />
-    <LinkField field={fields.link} />
+    <LinkField field={controlled(fields.link)} />
     <button>Save changes</button>
     {errors._errors.length > 0 && <div>{errors._errors.map(err => err.message).join(', ')}</div>}
   </form>
@@ -61,7 +61,7 @@ interface Link {
 }
 
 const LinkField = ({ field }: { field: Field<Link> }) => {
-  const { value, onChange } = useField(field)
+  const { value, onChange } = field
 
   return <div>
     <input
