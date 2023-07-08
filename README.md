@@ -52,7 +52,7 @@ const EditPage = () => {
 
 ### Error Handling
 
-```ts
+```tsx
 import { useForm } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
@@ -89,7 +89,7 @@ const EditPage = () => {
 
 ### Custom Fields
 
-```ts
+```tsx
 import { useForm, controlled, Field } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
