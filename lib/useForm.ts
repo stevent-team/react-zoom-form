@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 
-import { PathSegment, RecursivePartial, fieldChain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox, FormatSchemaErrors, errorChain, isRadio } from './utils'
+import { PathSegment, RecursivePartial, fieldChain, getDeepProp, setDeepProp, unwrapZodType, deepEqual, FormatSchemaFields, isCheckbox, isRadio } from './utils'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /** The zod schema to use when parsing the values. */
@@ -129,10 +129,6 @@ export const useForm = <Schema extends z.AnyZodObject>({
     name: () => string
   }>, [schema, register, formValue, formErrors])
 
-  const errors = useMemo(() => new Proxy(schema.shape, {
-    get: (_target, key) => errorChain(schema, [], formErrors)[key]
-  }) as FormatSchemaErrors<z.infer<Schema>>, [schema, formErrors])
-
   return {
     /** Access zod schema and registration functions for your fields. */
     fields,
@@ -145,7 +141,6 @@ export const useForm = <Schema extends z.AnyZodObject>({
      * return <form onSubmit={submitHandler(onSubmit)}>
      */
     handleSubmit,
-    errors,
     /** Will check if the form values are not deeply equal with the initialValues passed in the config or provided via `reset()`. */
     isDirty,
     /** Reset the form with provided values, or with initialValues if nothing is passed. */

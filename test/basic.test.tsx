@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { ZodIssue, z } from 'zod'
-import { SubmitHandler, useForm } from '@stevent-team/react-zoom-form'
+import { z } from 'zod'
+import { FieldControls, SubmitHandler, errors, useForm } from '@stevent-team/react-zoom-form'
 import userEvent from '@testing-library/user-event'
 
 const schema = z.object({
@@ -9,18 +9,18 @@ const schema = z.object({
   familyName: z.string().min(1, 'Field is required').default(''),
 })
 
-const FormError = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
-  errors._errors.length > 0 ? <span className="error" role="alert">{errors._errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+const FormError = ({ field }: { field: { _field: FieldControls } }) =>
+  errors(field).length > 0 ? <span className="error" role="alert">{errors(field).map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
 const BasicForm = ({ onSubmit }: { onSubmit: SubmitHandler<typeof schema> }) => {
-  const { fields, handleSubmit, errors } = useForm({ schema })
+  const { fields, handleSubmit } = useForm({ schema })
 
   return <form onSubmit={handleSubmit(onSubmit)}>
     <input {...fields.givenName.register()} type="text" placeholder="givenName" />
-    <FormError errors={errors.givenName} />
+    <FormError field={fields.givenName} />
 
     <input {...fields.familyName.register()} type="text" placeholder="familyName" />
-    <FormError errors={errors.familyName} />
+    <FormError field={fields.familyName} />
 
     <button type="submit">Submit</button>
   </form>
