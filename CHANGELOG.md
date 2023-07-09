@@ -1,5 +1,17 @@
 # @stevent-team/react-zoom-form
 
+## 0.3.0
+
+### Minor Changes
+
+- 616791d: Introduce `errors` helper fn.
+
+  This is a breaking change that removes the `errors` object from the return of `useForm`, and instead introduces a global function `errors()` that takes a field and returns an array of ZodIssues.
+
+### Patch Changes
+
+- dccb92c: Update packages
+
 ## 0.2.1
 
 ### Patch Changes
