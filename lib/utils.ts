@@ -14,16 +14,6 @@ type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Sche
   : Value
 export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & recursiveFormatSchemaFields<NonNullable<Schema>, Value>
 
-// Creates the type for the error chain
-type recursiveFormatSchemaErrors<TSchema> = TSchema extends [any, ...any[]] ? {
-    [K in keyof TSchema]: FormatSchemaErrors<TSchema[K]>
-  } : TSchema extends any[] ? {
-    [k: number]: FormatSchemaErrors<TSchema[number]>
-  } : TSchema extends object ? {
-    [K in keyof TSchema]: FormatSchemaErrors<TSchema[K]>
-  } : unknown
-export type FormatSchemaErrors<TSchema> = { _errors: z.ZodIssue[] } & recursiveFormatSchemaErrors<NonNullable<TSchema>>
-
 /** Recursively make a nested object structure partial */
 export type RecursivePartial<T> = {
   [P in keyof T]?:
@@ -87,36 +77,6 @@ export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], 
       }
 
       return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, controls)
-    },
-  }) as unknown
-
-export const errorChain = <S extends z.ZodType>(schema: S, path: PathSegment[], error?: z.ZodError<z.infer<S>>): any =>
-  new Proxy({}, {
-    get: (_target, key) => {
-      if (key === Symbol.toStringTag) return schema.toString()
-      if (key === Symbol.toPrimitive) return () => schema.toString()
-      if (typeof key === 'symbol') return schema
-
-      if (typeof key !== 'string') {
-        throw new Error(`${String(key)} must be a string`)
-      }
-
-      if (key === '_errors') {
-        return error?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
-      }
-
-      const unwrapped = unwrapZodType(schema)
-
-      // Support arrays
-      if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
-        return errorChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], error)
-      }
-
-      if (!(unwrapped instanceof z.ZodObject)) {
-        throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
-      }
-
-      return errorChain(unwrapped.shape[key], [...path, { key, type: 'object' }], error)
     },
   }) as unknown
 

@@ -1,5 +1,5 @@
-import { SubmitHandler, useForm, Field, controlled } from '@stevent-team/react-zoom-form'
-import { ZodIssue, z } from 'zod'
+import { SubmitHandler, useForm, Field, controlled, errors, FieldControls } from '@stevent-team/react-zoom-form'
+import { z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
@@ -26,15 +26,17 @@ const schema = z.object({
   radio: z.enum(['option1', 'option2', 'option3']),
 })
 
-const Error = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
-  errors._errors.length > 0 ? <span className="error">{errors._errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+const Error = ({ field }: { field: { _field: FieldControls } }) => {
+  const fieldErrors = errors(field)
+  return fieldErrors.length > 0 ? <span className="error">{fieldErrors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+}
 
 const initialValues = {
   defaultString: 'Default value',
 }
 
 const App = () => {
-  const { fields, handleSubmit, errors, isDirty, reset, value } = useForm({ schema, initialValues })
+  const { fields, handleSubmit, isDirty, reset, value } = useForm({ schema, initialValues })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
@@ -44,27 +46,27 @@ const App = () => {
   return <form onSubmit={handleSubmit(onSubmit)}>
     <label htmlFor={fields.requiredString.name()}>Required string</label>
     <input {...fields.requiredString.register()} id={fields.requiredString.name()} type="text" />
-    <Error errors={errors.requiredString} />
+    <Error field={fields.requiredString} />
 
     <label htmlFor={fields.optionalString.name()}>Optional string</label>
     <input {...fields.optionalString.register()} id={fields.optionalString.name()} type="text" />
-    <Error errors={errors.optionalString} />
+    <Error field={fields.optionalString} />
 
     <label htmlFor={fields.defaultString.name()}>Default string</label>
     <input {...fields.defaultString.register()} id={fields.defaultString.name()} type="text" />
-    <Error errors={errors.defaultString} />
+    <Error field={fields.defaultString} />
 
     <label htmlFor={fields.nested.inside.here.name()}>Nested string</label>
     <input {...fields.nested.inside.here.register()} id={fields.nested.inside.here.name()} type="text" />
-    <Error errors={errors.nested} />
+    <Error field={fields.nested} />
 
     <label htmlFor={fields.array[0].prop.name()}>Array value</label>
     <input {...fields.array[0].prop.register()} id={fields.array[0].prop.name()} type="text" />
-    <Error errors={errors.array} />
+    <Error field={fields.array} />
 
     <label htmlFor={fields.number.name()}>Number</label>
     <input {...fields.number.register()} id={fields.number.name()} type="number" />
-    <Error errors={errors.number} />
+    <Error field={fields.number} />
 
     <label>Link (custom component)</label>
     <LinkField field={controlled(fields.link)} />
@@ -73,12 +75,12 @@ const App = () => {
       <input {...fields.condition.register()} type="checkbox" />
       <span>Show conditional field?</span>
     </label>
-    <Error errors={errors.condition} />
+    <Error field={fields.condition} />
 
     {value.condition && <>
       <label htmlFor={fields.conditional.name()}>Conditional field</label>
       <input {...fields.conditional.register()} id={fields.conditional.name()} type="text" />
-      <Error errors={errors.conditional} />
+      <Error field={fields.conditional} />
     </>}
 
     <label>Radio field</label>
@@ -94,14 +96,14 @@ const App = () => {
       <input {...fields.radio.register()} value="option3" type="radio" />
       <span>Option 3</span>
     </label>
-    <Error errors={errors.radio} />
+    <Error field={fields.radio} />
 
     <button>Save changes</button>
 
     <output>
       <div>isDirty: {isDirty ? 'true' : 'false'}</div>
       <div>value: {JSON.stringify(value, null, 2)}</div>
-      <div>errors: {JSON.stringify(errors._errors, null, 2)}</div>
+      <div>errors: {JSON.stringify(errors(fields), null, 2)}</div>
     </output>
   </form>
 }

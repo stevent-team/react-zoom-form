@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, setDeepProp } from './utils'
 
-export type FieldControls<Schema extends z.ZodType> = {
+export type FieldControls<Schema extends z.ZodType = z.ZodType> = {
   schema: Schema
   path: PathSegment[]
-  formValue: RecursivePartial<z.infer<Schema>>
-  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.infer<Schema>>>>
-  formErrors: z.ZodError<z.infer<Schema>> | undefined
+  formValue: RecursivePartial<z.ZodType>
+  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
+  formErrors: z.ZodError<z.ZodType> | undefined
 }
 
 type PartialObject<T> = T extends any[] ? T : Partial<T>
@@ -33,15 +33,33 @@ export type Field<T> = {
  * Control a custom field. Takes the field you want to control from
  * `fields` given by the `useForm` hook, and returns an object with
  * state and methods that you can pass to your custom component.
+ *
+ * @example
+ * ```tsx
+ * <CustomField {...controlled(fields.myCustomField)} />
+ * ```
  */
-export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<T>> }): Field<T> => {
+export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<NonNullable<T>>> }): Field<NonNullable<T>> => {
   const { schema, path, formValue, setFormValue, formErrors } = _field
 
   return {
     schema,
     name: path.map(p => p.key).join('.'),
-    value: getDeepProp(formValue, path) as PartialObject<T> | undefined,
+    value: getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined,
     onChange: value => setFormValue(v => setDeepProp(v, path, value) as typeof v),
     errors: formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? [],
   }
 }
+
+/**
+ * Get the errors for a field. Useful for showing errors for a native
+ * input, unlike `controlled` which also gives you the errors for that field.
+ *
+ * @example
+ * ```tsx
+ * <input type="text" {...fields.myInput.register()} />
+ * <span>{errors(fields.myInput).map(e => e.message).join(', ')}</span>
+ * ```
+ */
+export const errors = <T>({ _field: { formErrors, path } }: { _field: FieldControls<z.ZodType<T>> }): z.ZodIssue[] =>
+  formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
