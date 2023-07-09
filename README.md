@@ -19,7 +19,7 @@ yarn add @stevent-team/react-zoom-form zod
 ### Basic Example
 
 ```tsx
-import { useForm } from '@stevent-team/react-zoom-form'
+import { useForm, errors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -33,7 +33,7 @@ const schema = z.object({
 })
 
 const EditPage = () => {
-  const { fields, handleSubmit, errors } = useForm({ schema })
+  const { fields, handleSubmit } = useForm({ schema })
 
   const onSubmit = values => {
     console.log(values)
@@ -45,7 +45,7 @@ const EditPage = () => {
     <input {...fields.address.street.register()} type="text" />
     <input {...fields.address.city.register()} type="text" />
     <button>Save changes</button>
-    {errors._errors.length > 0 && <div>{errors._errors.map(err => err.message).join(', ')}</div>}
+    {errors(fields).length > 0 && <div>{errors(fields).map(err => err.message).join(', ')}</div>}
   </form>
 }
 ```
@@ -53,7 +53,7 @@ const EditPage = () => {
 ### Error Handling
 
 ```tsx
-import { useForm } from '@stevent-team/react-zoom-form'
+import { useForm, errors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -63,11 +63,13 @@ const schema = z.object({
 })
 
 // Display comma separated error messages
-const Error = ({ errors }: { errors: { _errors: ZodIssue[] } }) =>
-  errors._errors.length > 0 ? <span className="error">{errors._errors.map(e => e.message).join(', ')}</span> : null
+const Error = ({ field }: { field: { _field: FieldControls } }) => {
+  const fieldErrors = errors(field) // Extract errors for this field
+  return fieldErrors.length > 0 ? <span className="error">{fieldErrors.map(e => e.message).join(', ')}</span> : null
+}
 
 const EditPage = () => {
-  const { fields, handleSubmit, errors } = useForm({ schema })
+  const { fields, handleSubmit } = useForm({ schema })
 
   const onSubmit = values => {
     console.log(values)
@@ -76,11 +78,11 @@ const EditPage = () => {
   return <form onSubmit={handleSubmit(onSubmit)}>
     <label htmlFor={field.name.name()}>Name</label>
     <input {...fields.name.register()} id={field.name.name()} type="text" />
-    <Error errors={errors.name} />
+    <Error field={fields.name} />
 
     <label htmlFor={field.age.name()}>Name</label>
     <input {...fields.age.register()} id={field.age.name()} type="number" />
-    <Error errors={errors.age} />
+    <Error field={fields.age} />
 
     <button>Save changes</button>
   </form>
@@ -126,20 +128,23 @@ interface Link {
 }
 
 const LinkField = ({ field }: { field: Field<Link> }) => {
-  const { value, onChange } = field
+  const { value, onChange, errors } = field
 
-  return <div>
-    <input
-      type="text"
-      value={value.label}
-      onChange={e => onChange({ ...value, label: e.currentTarget.value })}
-    />
-    <input
-      type="url"
-      value={value.url}
-      onChange={e => onChange({ ...value, url: e.currentTarget.value })}
-    />
-  </div>
+  return <>
+    <div>
+      <input
+        type="text"
+        value={value.label}
+        onChange={e => onChange({ ...value, label: e.currentTarget.value })}
+      />
+      <input
+        type="url"
+        value={value.url}
+        onChange={e => onChange({ ...value, url: e.currentTarget.value })}
+      />
+    </div>
+    {errors.length > 0 && <span>{errors.map(e => e.message).join(', ')}</span>}
+  </>
 }
 ```
 
