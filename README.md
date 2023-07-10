@@ -148,6 +148,10 @@ const LinkField = ({ field }: { field: Field<Link> }) => {
 }
 ```
 
+### Tips
+
+- If you're computing your schema inside the react component that calls `useForm`, be sure to memoize the schema so rerenders of the component do not recalculate the schema. This also goes for `initialValues`.
+
 ## Contributing
 
 You can install dependencies by running `yarn` after cloning this repo, and `yarn dev` to start the example.
