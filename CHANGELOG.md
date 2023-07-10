@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 0.3.1
+
+### Patch Changes
+
+- 06966d6: Decouple register fn from useForm hook
+
 ## 0.3.0
 
 ### Minor Changes
