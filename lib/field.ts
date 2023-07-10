@@ -105,16 +105,16 @@ export const errors = <T>({ _field: { formErrors, path } }: { _field: FieldContr
   formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
 
 /**
- * Watch the value of a field. You can also use the base `fields` object to
+ * Get the value of a field. You can also use the base `fields` object to
  * watch all values in the form.
  *
  * @example
  * ```ts
- * const myInputValue = watch(fields.myInput)
- * const formValue = watch(fields)
+ * const myInputValue = getValue(fields.myInput)
+ * const formValue = getValue(fields)
  * ```
  */
-export const watch = <T>({ _field: { formValue, path } }: { _field: FieldControls<z.ZodType<T>> }) =>
+export const getValue = <T>({ _field: { formValue, path } }: { _field: FieldControls<z.ZodType<T>> }) =>
   getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined
 
 /**
