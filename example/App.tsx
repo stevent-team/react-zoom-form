@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm, Field, controlled, fieldErrors, FieldControls } from '@stevent-team/react-zoom-form'
+import { SubmitHandler, useForm, Field, controlled, fieldErrors, FieldControls, getValue } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -36,7 +36,7 @@ const initialValues = {
 }
 
 const App = () => {
-  const { fields, handleSubmit, isDirty, reset, value } = useForm({ schema, initialValues })
+  const { fields, handleSubmit, isDirty, reset } = useForm({ schema, initialValues })
 
   const onSubmit: SubmitHandler<typeof schema> = values => {
     console.log(values)
@@ -77,7 +77,7 @@ const App = () => {
     </label>
     <Error field={fields.condition} />
 
-    {value.condition && <>
+    {getValue(fields.condition) && <>
       <label htmlFor={fields.conditional.name()}>Conditional field</label>
       <input {...fields.conditional.register()} id={fields.conditional.name()} type="text" />
       <Error field={fields.conditional} />
@@ -102,7 +102,7 @@ const App = () => {
 
     <output>
       <div>isDirty: {isDirty ? 'true' : 'false'}</div>
-      <div>value: {JSON.stringify(value, null, 2)}</div>
+      <div>value: {JSON.stringify(getValue(fields), null, 2)}</div>
       <div>errors: {JSON.stringify(fieldErrors(fields), null, 2)}</div>
     </output>
   </form>

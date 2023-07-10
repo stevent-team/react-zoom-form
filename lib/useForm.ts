@@ -119,6 +119,5 @@ export const useForm = <Schema extends z.AnyZodObject>({
     isDirty,
     /** Reset the form with provided values, or with initialValues if nothing is passed. */
     reset,
-    value: formValue,
   }
 }

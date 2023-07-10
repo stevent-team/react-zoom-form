@@ -103,3 +103,35 @@ export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<NonN
  */
 export const fieldErrors = <T>({ _field: { formErrors, path } }: { _field: FieldControls<z.ZodType<T>> }): z.ZodIssue[] =>
   formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
+
+/**
+ * Get the value of a field. You can also use the base `fields` object to
+ * watch all values in the form.
+ *
+ * @example
+ * ```ts
+ * const myInputValue = getValue(fields.myInput)
+ * const formValue = getValue(fields)
+ * ```
+ */
+export const getValue = <T>({ _field: { formValue, path } }: { _field: FieldControls<z.ZodType<T>> }) =>
+  getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined
+
+/**
+ * Set the value of a field directly.
+ *
+ * @example
+ * ```ts
+ * setValue(fields.myInput, 'Hi there!')
+ * ```
+ */
+export const setValue = <T>(
+  { _field: { setFormValue, path } }: { _field: FieldControls<z.ZodType<T>> },
+  newValue: PartialObject<NonNullable<T>> | undefined | ((currentValue: PartialObject<NonNullable<T>> | undefined) => PartialObject<NonNullable<T>> | undefined)
+) => {
+  if (typeof newValue === 'function') {
+    setFormValue(v => setDeepProp(v, path, newValue(getDeepProp(v, path) as PartialObject<NonNullable<T>> | undefined)) as typeof v)
+  } else {
+    setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
+  }
+}
