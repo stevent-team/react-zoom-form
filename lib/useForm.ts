@@ -5,7 +5,12 @@ import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, Form
 import { RegisterFn, register } from './field'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
-  /** The zod schema to use when parsing the values. */
+  /**
+   * The zod schema to use when parsing the values.
+   *
+   * @important
+   * If you're calculating this, be sure to memoize the value.
+   */
   schema: Schema
   /** Initialise the fields with values. By default they will be set to undefined. */
   initialValues?: RecursivePartial<z.infer<Schema>>
