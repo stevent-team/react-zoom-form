@@ -4,14 +4,14 @@ import { z } from 'zod'
 // Define the structure and validation of your form
 const schema = z.object({
   requiredString: z.string().trim().min(1, 'This field is required').default(''),
-  optionalString: z.string().trim().default(''),
+  optionalString: z.string().trim().nullish(),
   defaultString: z.string().trim().default('Default value'),
   number: z.coerce.number().min(3).max(10),
   nested: z.object({
     inside: z.object({
       here: z.string().trim().min(1),
     }),
-  }),
+  }).optional(),
   array: z.array(
     z.object({
       prop: z.string().trim().min(1),
