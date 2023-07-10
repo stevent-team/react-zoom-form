@@ -98,8 +98,8 @@ export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<NonN
  * @example
  * ```tsx
  * <input type="text" {...fields.myInput.register()} />
- * <span>{errors(fields.myInput).map(e => e.message).join(', ')}</span>
+ * <span>{fieldErrors(fields.myInput).map(e => e.message).join(', ')}</span>
  * ```
  */
-export const errors = <T>({ _field: { formErrors, path } }: { _field: FieldControls<z.ZodType<T>> }): z.ZodIssue[] =>
+export const fieldErrors = <T>({ _field: { formErrors, path } }: { _field: FieldControls<z.ZodType<T>> }): z.ZodIssue[] =>
   formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []

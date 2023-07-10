@@ -19,7 +19,7 @@ yarn add @stevent-team/react-zoom-form zod
 ### Basic Example
 
 ```tsx
-import { useForm, errors } from '@stevent-team/react-zoom-form'
+import { useForm, fieldErrors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -45,7 +45,7 @@ const EditPage = () => {
     <input {...fields.address.street.register()} type="text" />
     <input {...fields.address.city.register()} type="text" />
     <button>Save changes</button>
-    {errors(fields).length > 0 && <div>{errors(fields).map(err => err.message).join(', ')}</div>}
+    {fieldErrors(fields).length > 0 && <div>{fieldErrors(fields).map(err => err.message).join(', ')}</div>}
   </form>
 }
 ```
@@ -53,7 +53,7 @@ const EditPage = () => {
 ### Error Handling
 
 ```tsx
-import { useForm, errors } from '@stevent-team/react-zoom-form'
+import { useForm, fieldErrors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -64,7 +64,7 @@ const schema = z.object({
 
 // Display comma separated error messages
 const Error = ({ field }: { field: { _field: FieldControls } }) => {
-  const fieldErrors = errors(field) // Extract errors for this field
+  const fieldErrors = fieldErrors(field) // Extract errors for this field
   return fieldErrors.length > 0 ? <span className="error">{fieldErrors.map(e => e.message).join(', ')}</span> : null
 }
 

@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm, Field, controlled, errors, FieldControls } from '@stevent-team/react-zoom-form'
+import { SubmitHandler, useForm, Field, controlled, fieldErrors, FieldControls } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -27,8 +27,8 @@ const schema = z.object({
 })
 
 const Error = ({ field }: { field: { _field: FieldControls } }) => {
-  const fieldErrors = errors(field)
-  return fieldErrors.length > 0 ? <span className="error">{fieldErrors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+  const errors = fieldErrors(field)
+  return errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 }
 
 const initialValues = {
@@ -103,7 +103,7 @@ const App = () => {
     <output>
       <div>isDirty: {isDirty ? 'true' : 'false'}</div>
       <div>value: {JSON.stringify(value, null, 2)}</div>
-      <div>errors: {JSON.stringify(errors(fields), null, 2)}</div>
+      <div>errors: {JSON.stringify(fieldErrors(fields), null, 2)}</div>
     </output>
   </form>
 }
