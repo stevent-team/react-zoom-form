@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, setDeepProp } from './utils'
+import { PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
+import { FieldRefs } from './useForm'
 
 export type FieldControls<Schema extends z.ZodType = z.ZodType> = {
   schema: Schema
@@ -27,6 +28,45 @@ export type Field<T> = {
   onChange: (value: PartialObject<T> | undefined) => void
   /** Array of ZodIssues for this field. */
   errors: z.ZodIssue[]
+}
+
+export type RegisterFn = (
+  path: PathSegment[],
+  schema: z.ZodType,
+  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>,
+  fieldRefs: React.MutableRefObject<FieldRefs>,
+) => {
+  onChange: React.ChangeEventHandler<any>
+  ref: React.Ref<any>
+  name: string
+}
+
+// Register for native elements (input, textarea, select)
+export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs) => {
+  const name = path.map(p => p.key).join('.')
+  const unwrapped = unwrapZodType(fieldSchema)
+
+  return {
+    onChange: e => {
+      let newValue: string | boolean | undefined = e.currentTarget.value
+      if (!(unwrapped instanceof z.ZodString) && newValue === '') {
+        newValue = undefined
+      }
+      if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
+        newValue = e.currentTarget.checked
+      }
+      setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
+    },
+    name,
+    ref: ref => {
+      if (ref) {
+        const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
+        fieldRefs.current[refIndex] = { path, ref }
+      } else {
+        delete fieldRefs.current[name]
+      }
+    },
+  } satisfies React.ComponentProps<'input'>
 }
 
 /**

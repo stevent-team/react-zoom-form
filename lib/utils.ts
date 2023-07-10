@@ -1,4 +1,4 @@
-import { FieldControls, RegisterFn } from '.'
+import { FieldControls, FieldRefs, RegisterFn } from '.'
 import { z } from 'zod'
 
 // Creates the type for the field chain
@@ -44,7 +44,13 @@ export type PathSegment = {
  *
  * Thanks to [react-zorm](https://github.com/esamattis/react-zorm) for the inspiration.
  */
-export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], register: RegisterFn, controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>): any =>
+export const fieldChain = <S extends z.ZodType>(
+  schema: S,
+  path: PathSegment[],
+  register: RegisterFn,
+  fieldRefs: React.MutableRefObject<FieldRefs>,
+  controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>,
+): any =>
   new Proxy({}, {
     get: (_target, key) => {
       if (key === Symbol.toStringTag) return schema.toString()
@@ -67,16 +73,16 @@ export const fieldChain = <S extends z.ZodType>(schema: S, path: PathSegment[], 
 
       // Support arrays
       if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
-        return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, controls)
+        return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, fieldRefs, controls)
       }
 
       if (!(unwrapped instanceof z.ZodObject)) {
-        if (key === 'register') return () => register(path, schema)
+        if (key === 'register') return () => register(path, schema, controls.setFormValue, fieldRefs)
         if (key === 'name') return () => path.map(p => p.key).join('.')
         throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
       }
 
-      return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, controls)
+      return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
     },
   }) as unknown
 
