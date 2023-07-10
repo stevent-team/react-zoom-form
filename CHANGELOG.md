@@ -1,5 +1,16 @@
 # @stevent-team/react-zoom-form
 
+## 0.4.0
+
+### Minor Changes
+
+- 71bece3: Changed name of `errors` fn to `fieldErrors` to be clearer about it's function
+- e8eb654: Add helper functions for watching a value and directly setting a value
+
+### Patch Changes
+
+- b97da5c: Support nullable and optional zod schemas in the fields object type
+
 ## 0.3.1
 
 ### Patch Changes
