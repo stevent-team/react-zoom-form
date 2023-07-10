@@ -1,17 +1,17 @@
-import { SubmitHandler, useForm, Field, controlled, errors, FieldControls, getValue } from '@stevent-team/react-zoom-form'
+import { SubmitHandler, useForm, Field, controlled, fieldErrors, FieldControls, getValue } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
 const schema = z.object({
   requiredString: z.string().trim().min(1, 'This field is required').default(''),
-  optionalString: z.string().trim().default(''),
+  optionalString: z.string().trim().nullish(),
   defaultString: z.string().trim().default('Default value'),
   number: z.coerce.number().min(3).max(10),
   nested: z.object({
     inside: z.object({
       here: z.string().trim().min(1),
     }),
-  }),
+  }).optional(),
   array: z.array(
     z.object({
       prop: z.string().trim().min(1),
@@ -27,8 +27,8 @@ const schema = z.object({
 })
 
 const Error = ({ field }: { field: { _field: FieldControls } }) => {
-  const fieldErrors = errors(field)
-  return fieldErrors.length > 0 ? <span className="error">{fieldErrors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
+  const errors = fieldErrors(field)
+  return errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 }
 
 const initialValues = {
@@ -103,7 +103,7 @@ const App = () => {
     <output>
       <div>isDirty: {isDirty ? 'true' : 'false'}</div>
       <div>value: {JSON.stringify(getValue(fields), null, 2)}</div>
-      <div>errors: {JSON.stringify(errors(fields), null, 2)}</div>
+      <div>errors: {JSON.stringify(fieldErrors(fields), null, 2)}</div>
     </output>
   </form>
 }

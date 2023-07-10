@@ -2,17 +2,14 @@ import { FieldControls, FieldRefs, RegisterFn } from '.'
 import { z } from 'zod'
 
 // Creates the type for the field chain
-type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> = z.infer<Schema> extends Value ? z.infer<Schema>
-  : Schema extends z.AnyZodTuple ? {
-    [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value>
-  } : Schema extends z.ZodArray<any> ? {
-    [k: number]: FormatSchemaFields<Schema['_def']['type'], Value>
-  } : Schema extends z.AnyZodObject ? {
-    [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['shape'][K], Value>
-  } : Schema extends z.ZodDefault<any> ?
-    FormatSchemaFields<Schema['_def']['innerType'], Value>
+type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> =
+  z.infer<Schema> extends Value ? z.infer<Schema>
+  : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value> }
+  : Schema extends z.ZodArray<any> ? { [k: number]: FormatSchemaFields<Schema['_def']['type'], Value> }
+  : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['shape'][K], Value> }
+  : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FormatSchemaFields<Schema['_def']['innerType'], Value>
   : Value
-export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & recursiveFormatSchemaFields<NonNullable<Schema>, Value>
+export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & Required<recursiveFormatSchemaFields<NonNullable<Schema>, Value>>
 
 /** Recursively make a nested object structure partial */
 export type RecursivePartial<T> = {
