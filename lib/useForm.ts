@@ -16,6 +16,24 @@ export interface UseFormOptions<Schema extends z.AnyZodObject> {
   initialValues?: RecursivePartial<z.infer<Schema>>
 }
 
+export interface UseFormReturn<Schema extends z.AnyZodObject> {
+  /** Access zod schema and registration functions for your fields. */
+  fields: FieldChain<Schema>
+  /**
+   * Higher-order function that intercepts a form's onSubmit event and gives you the values, after validating with the provided zod schema.
+   *
+   * @example
+   * const onSubmit: SubmitHandler<typeof schema> = values => console.log(values)
+   *
+   * return <form onSubmit={submitHandler(onSubmit)}>
+   */
+  handleSubmit: (handler: SubmitHandler<Schema>) => React.FormEventHandler<HTMLFormElement>
+  /** Will check if the form values are not deeply equal with the initialValues passed in the config or provided via `reset()`. */
+  isDirty: boolean
+  /** Reset the form with provided values, or with initialValues if nothing is passed. */
+  reset: (values?: RecursivePartial<z.TypeOf<Schema>>) => void
+}
+
 export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
 
 export type FieldRefs = Record<string, { path: PathSegment[], ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement }>
@@ -38,7 +56,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
   const [internalInitialValues, setInternalInitialValues] = useState(structuredClone(initialValues))
   const isDirty = useMemo(() => !deepEqual(formValue, internalInitialValues), [formValue, internalInitialValues])
 
-  const reset = useCallback((values: RecursivePartial<z.infer<Schema>> = initialValues) => {
+  const reset = useCallback<UseFormReturn<Schema>['reset']>((values = initialValues) => {
     setInternalInitialValues(values)
     setFormValue(values)
   }, [initialValues])
@@ -76,7 +94,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
   }, [formValue, validateOnChange, validate])
 
   // Submit handler
-  const handleSubmit = useCallback((handler: SubmitHandler<Schema>): React.FormEventHandler<HTMLFormElement> => async e => {
+  const handleSubmit = useCallback<UseFormReturn<Schema>['handleSubmit']>(handler => async e => {
     e.preventDefault()
     e.stopPropagation()
     const values = await validate()
@@ -89,20 +107,9 @@ export const useForm = <Schema extends z.AnyZodObject>({
   }) as FieldChain<Schema>, [schema, formValue, formErrors])
 
   return {
-    /** Access zod schema and registration functions for your fields. */
     fields,
-    /**
-     * Higher-order function that intercepts a form's onSubmit event and gives you the values, after validating with the provided zod schema.
-     *
-     * @example
-     * const onSubmit: SubmitHandler<typeof schema> = values => console.log(values)
-     *
-     * return <form onSubmit={submitHandler(onSubmit)}>
-     */
     handleSubmit,
-    /** Will check if the form values are not deeply equal with the initialValues passed in the config or provided via `reset()`. */
     isDirty,
-    /** Reset the form with provided values, or with initialValues if nothing is passed. */
     reset,
   }
 }
