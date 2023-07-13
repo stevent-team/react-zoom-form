@@ -1,4 +1,4 @@
-import { FieldControls, FieldRefs, RegisterFn } from '.'
+import { Field, FieldRefs, RegisterFn } from '.'
 import { z } from 'zod'
 
 // Creates the type for the field chain by recusively travelling through the Zod schema
@@ -10,7 +10,7 @@ type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
   : LeafValue
 
-export type FieldChain<Schema extends z.ZodType> = { _field: FieldControls<Schema> } & Required<recursiveFieldChain<NonNullable<Schema>, {
+export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<NonNullable<Schema>, {
   /**
    * Provides props to pass to native elements (input, textarea, select)
    *
@@ -37,6 +37,9 @@ export type RecursivePartial<T> = {
     T[P] extends object | undefined ? RecursivePartial<T[P]> :
     T[P]
 }
+
+/** Same behaviour as Partial but does not affect arrays. */
+export type PartialObject<T> = T extends any[] ? T : Partial<T>
 
 export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
@@ -65,7 +68,7 @@ export const fieldChain = <S extends z.ZodType>(
   path: PathSegment[],
   register: RegisterFn,
   fieldRefs: React.MutableRefObject<FieldRefs>,
-  controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>,
+  controls: Omit<Field<z.ZodTypeAny>['_field'], 'schema' | 'path'>,
 ): any =>
   new Proxy({}, {
     get: (_target, key) => {
@@ -85,7 +88,7 @@ export const fieldChain = <S extends z.ZodType>(
           schema,
           path,
           ...controls,
-        } satisfies FieldControls<z.ZodTypeAny>
+        } satisfies Field<z.ZodTypeAny>['_field']
       }
 
       // Attempt to unwrap the Zod type if it's inside a ZodDefault, ZodOptional, ect.

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { z } from 'zod'
-import { FieldControls, SubmitHandler, fieldErrors, useForm } from '@stevent-team/react-zoom-form'
+import { Field, SubmitHandler, fieldErrors, useForm } from '@stevent-team/react-zoom-form'
 import userEvent from '@testing-library/user-event'
 
 const schema = z.object({
@@ -9,7 +9,7 @@ const schema = z.object({
   familyName: z.string().min(1, 'Field is required').default(''),
 })
 
-const FormError = ({ field }: { field: { _field: FieldControls } }) =>
+const FormError = ({ field }: { field: Field }) =>
   fieldErrors(field).length > 0 ? <span className="error" role="alert">{fieldErrors(field).map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 
 const BasicForm = ({ onSubmit }: { onSubmit: SubmitHandler<typeof schema> }) => {

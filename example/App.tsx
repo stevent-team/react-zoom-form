@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm, Field, controlled, fieldErrors, FieldControls, getValue } from '@stevent-team/react-zoom-form'
+import { SubmitHandler, useForm, ControlledField, controlled, fieldErrors, Field, getValue } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 
 // Define the structure and validation of your form
@@ -26,7 +26,7 @@ const schema = z.object({
   radio: z.enum(['option1', 'option2', 'option3']),
 })
 
-const Error = ({ field }: { field: { _field: FieldControls } }) => {
+const Error = ({ field }: { field: Field }) => {
   const errors = fieldErrors(field)
   return errors.length > 0 ? <span className="error">{errors.map(e => `${e.message} (${e.code})`).join(', ')}</span> : null
 }
@@ -113,7 +113,7 @@ interface Link {
   url: string
 }
 
-const LinkField = ({ field }: { field: Field<Link> }) => {
+const LinkField = ({ field }: { field: ControlledField<Link> }) => {
   const { value, onChange, errors } = field
 
   return <>

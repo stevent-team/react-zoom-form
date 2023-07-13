@@ -1,20 +1,32 @@
 import { z } from 'zod'
-import { PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
+import { PartialObject, PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
 import { FieldRefs } from './useForm'
 
 /** The controls that each path along the field chain can access under `_field`. */
-export type FieldControls<Schema extends z.ZodType = z.ZodType> = {
-  schema: Schema
-  path: PathSegment[]
-  formValue: RecursivePartial<z.ZodType>
-  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
-  formErrors: z.ZodError<z.ZodType> | undefined
+export type Field<Schema extends z.ZodType = z.ZodType> = {
+  _field: {
+    schema: Schema
+    path: PathSegment[]
+    formValue: RecursivePartial<z.ZodType>
+    setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
+    formErrors: z.ZodError<z.ZodType> | undefined
+  }
 }
 
-/** Same behaviour as Partial but does not affect arrays. */
-type PartialObject<T> = T extends any[] ? T : Partial<T>
-
-export type Field<T> = {
+/**
+ * Return type of `controlled`. Can be used to restrict a custom field to a certain type.
+ *
+ * @example
+ * ```tsx
+ * interface Link {
+ *   label: string
+ *   url: string
+ * }
+ *
+ * const LinkField = ({ value, onChange }: ControlledField<Link>) => <>...</>
+ * ```
+ */
+export type ControlledField<T> = {
   /**
    * The name of this field.
    *
@@ -85,7 +97,7 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs)
  * <CustomField {...controlled(fields.myCustomField)} />
  * ```
  */
-export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<NonNullable<T>>> }): Field<NonNullable<T>> => {
+export const controlled = <T>({ _field }: Field<z.ZodType<NonNullable<T>>>): ControlledField<NonNullable<T>> => {
   const { schema, path, formValue, setFormValue, formErrors } = _field
 
   return {
@@ -107,7 +119,7 @@ export const controlled = <T>({ _field }: { _field: FieldControls<z.ZodType<NonN
  * <span>{fieldErrors(fields.myInput).map(e => e.message).join(', ')}</span>
  * ```
  */
-export const fieldErrors = <T>({ _field: { formErrors, path } }: { _field: FieldControls<z.ZodType<T>> }): z.ZodIssue[] =>
+export const fieldErrors = <T>({ _field: { formErrors, path } }: Field<z.ZodType<T>>): z.ZodIssue[] =>
   formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
 
 /**
@@ -120,7 +132,7 @@ export const fieldErrors = <T>({ _field: { formErrors, path } }: { _field: Field
  * const formValue = getValue(fields)
  * ```
  */
-export const getValue = <T>({ _field: { formValue, path } }: { _field: FieldControls<z.ZodType<T>> }) =>
+export const getValue = <T>({ _field: { formValue, path } }: Field<z.ZodType<T>>) =>
   getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined
 
 /**
@@ -133,7 +145,7 @@ export const getValue = <T>({ _field: { formValue, path } }: { _field: FieldCont
  * ```
  */
 export const setValue = <T>(
-  { _field: { setFormValue, path } }: { _field: FieldControls<z.ZodType<T>> },
+  { _field: { setFormValue, path } }: Field<z.ZodType<T>>,
   newValue: PartialObject<NonNullable<T>> | undefined | ((currentValue: PartialObject<NonNullable<T>> | undefined) => PartialObject<NonNullable<T>> | undefined)
 ) => {
   if (typeof newValue === 'function') {
