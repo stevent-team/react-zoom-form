@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 
-import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, FormatSchemaFields, isCheckbox, isRadio } from './utils'
-import { RegisterFn, register } from './field'
+import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, FieldChain, isCheckbox, isRadio } from './utils'
+import { register } from './field'
 
 export interface UseFormOptions<Schema extends z.AnyZodObject> {
   /**
@@ -86,22 +86,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
 
   const fields = useMemo(() => new Proxy(schema.shape, {
     get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors })[key]
-  }) as FormatSchemaFields<Schema, {
-    /**
-     * Provides props to pass to native elements (input, textarea, select)
-     *
-     * @example
-     * <input type="text" {...fields.firstName.register()} />
-     */
-    register: () => ReturnType<RegisterFn>
-    /**
-     * Get the name of this field used by the register function.
-     *
-     * @example
-     * <label htmlFor={field.firstName.name()}>First name</label>
-     */
-    name: () => string
-  }>, [schema, formValue, formErrors])
+  }) as FieldChain<Schema>, [schema, formValue, formErrors])
 
   return {
     /** Access zod schema and registration functions for your fields. */

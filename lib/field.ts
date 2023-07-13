@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
 import { FieldRefs } from './useForm'
 
+/** The controls that each path along the field chain can access under `_field`. */
 export type FieldControls<Schema extends z.ZodType = z.ZodType> = {
   schema: Schema
   path: PathSegment[]
@@ -10,6 +11,7 @@ export type FieldControls<Schema extends z.ZodType = z.ZodType> = {
   formErrors: z.ZodError<z.ZodType> | undefined
 }
 
+/** Same behaviour as Partial but does not affect arrays. */
 type PartialObject<T> = T extends any[] ? T : Partial<T>
 
 export type Field<T> = {
@@ -30,6 +32,7 @@ export type Field<T> = {
   errors: z.ZodIssue[]
 }
 
+/** Type of the `.register()` function for native elements. */
 export type RegisterFn = (
   path: PathSegment[],
   schema: z.ZodType,
@@ -52,6 +55,7 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs)
       if (!(unwrapped instanceof z.ZodString) && newValue === '') {
         newValue = undefined
       }
+      // If this field uses a checkbox, read it's `checked` state
       if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
         newValue = e.currentTarget.checked
       }
@@ -59,7 +63,9 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs)
     },
     name,
     ref: ref => {
+      // Store field ref in an object to dedupe them per field
       if (ref) {
+        // Note, radio fields use the same name per group, so they have to be referenced by value
         const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
         fieldRefs.current[refIndex] = { path, ref }
       } else {
@@ -123,6 +129,7 @@ export const getValue = <T>({ _field: { formValue, path } }: { _field: FieldCont
  * @example
  * ```ts
  * setValue(fields.myInput, 'Hi there!')
+ * setValue(fields.myInput, currentValue => `${currentValue}!!`)
  * ```
  */
 export const setValue = <T>(
