@@ -20,17 +20,19 @@ export default defineConfig({
       fileName: 'react-zoom-form',
     },
     rollupOptions: {
-      external: ['react', 'zod'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'zod'],
       output: {
         globals: {
           react: 'React',
-          zod: 'zod',
+          'react-dom': 'ReactDOM',
+          'react/jsx-runtime': 'react/jsx-runtime',
+          zod: 'z',
         }
       }
     },
   },
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     globals: true,
     setupFiles: './test/setup.ts',
   }

@@ -1,15 +1,34 @@
-import { FieldControls, FieldRefs, RegisterFn } from '.'
+import { Field, FieldRefs, RegisterFn } from '.'
 import { z } from 'zod'
 
-// Creates the type for the field chain
-type recursiveFormatSchemaFields<Schema extends z.ZodType, Value> =
-  z.infer<Schema> extends Value ? z.infer<Schema>
-  : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['_type'][K], Value> }
-  : Schema extends z.ZodArray<any> ? { [k: number]: FormatSchemaFields<Schema['_def']['type'], Value> }
-  : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FormatSchemaFields<Schema['shape'][K], Value> }
-  : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FormatSchemaFields<Schema['_def']['innerType'], Value>
-  : Value
-export type FormatSchemaFields<Schema extends z.ZodType, Value> = { _field: FieldControls<Schema> } & Required<recursiveFormatSchemaFields<NonNullable<Schema>, Value>>
+// Creates the type for the field chain by recusively travelling through the Zod schema
+type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
+  z.infer<Schema> extends LeafValue ? z.infer<Schema>
+  : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['_type'][K]> }
+  : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
+  : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
+  : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
+  : LeafValue
+
+export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<NonNullable<Schema>, {
+  /**
+   * Provides props to pass to native elements (input, textarea, select)
+   *
+   * @example
+   * <input type="text" {...fields.firstName.register()} />
+   */
+  register: () => ReturnType<RegisterFn>
+  /**
+   * Get the name of this field used by the register function.
+   *
+   * @example
+   * <label htmlFor={fields.firstName.name()}>First name</label>
+   *
+   * @example
+   * fields.location.address.line1.name() === 'location.address.line1'
+   */
+  name: () => string
+}>>
 
 /** Recursively make a nested object structure partial */
 export type RecursivePartial<T> = {
@@ -18,6 +37,9 @@ export type RecursivePartial<T> = {
     T[P] extends object | undefined ? RecursivePartial<T[P]> :
     T[P]
 }
+
+/** Same behaviour as Partial but does not affect arrays. */
+export type PartialObject<T> = T extends any[] ? T : Partial<T>
 
 export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
@@ -46,49 +68,57 @@ export const fieldChain = <S extends z.ZodType>(
   path: PathSegment[],
   register: RegisterFn,
   fieldRefs: React.MutableRefObject<FieldRefs>,
-  controls: Omit<FieldControls<z.ZodTypeAny>, 'schema' | 'path'>,
+  controls: Omit<Field<z.ZodTypeAny>['_field'], 'schema' | 'path'>,
 ): any =>
   new Proxy({}, {
     get: (_target, key) => {
+      // Handle attempts at accessing symbols
       if (key === Symbol.toStringTag) return schema.toString()
       if (key === Symbol.toPrimitive) return () => schema.toString()
       if (typeof key === 'symbol') return schema
 
+      // Ensure key is a string
       if (typeof key !== 'string') {
         throw new Error(`${String(key)} must be a string`)
       }
 
+      // If hidden _field prop is accessed by a method like controlled or fieldErrors
       if (key === '_field') {
         return {
           schema,
           path,
           ...controls,
-        } satisfies FieldControls<z.ZodTypeAny>
+        } satisfies Field<z.ZodTypeAny>['_field']
       }
 
+      // Attempt to unwrap the Zod type if it's inside a ZodDefault, ZodOptional, ect.
       const unwrapped = unwrapZodType(schema)
 
-      // Support arrays
+      // Support arrays by checking if the Zod schema at this point is an array, and the key is coercible to a number
       if (unwrapped instanceof z.ZodArray && !isNaN(Number(key))) {
         return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, fieldRefs, controls)
       }
 
+      // If the current Zod schema is not an array or object, we must be at a leaf node
       if (!(unwrapped instanceof z.ZodObject)) {
+        // Leaf node functions
         if (key === 'register') return () => register(path, schema, controls.setFormValue, fieldRefs)
         if (key === 'name') return () => path.map(p => p.key).join('.')
+
+        // Attempted to access a property that didn't exist
         throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
       }
 
       return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
     },
-  }) as unknown
+  }) as unknown // Never let them know your next move...
 
 type Obj = Record<string, unknown> | unknown[]
 
 /**
- * Fetch an object's deeply nested property using a path of keys
- * Will attempt to coerce the key to an integer if an array is encountered
- **/
+ * Fetch an object's deeply nested property using a path of keys.
+ * Will attempt to coerce the key to an integer if an array is encountered.
+ */
 export const getDeepProp = <T extends Obj>(obj: T, path: PathSegment[]): unknown => {
   // No path left, return the current value
   if (path.length === 0 || obj === undefined || obj === null) return obj
@@ -118,10 +148,10 @@ export const getDeepProp = <T extends Obj>(obj: T, path: PathSegment[]): unknown
 }
 
 /**
- * Mutate an object's deeply nested property
- * Will respect existing arrays and coerce keys to integers when applicable
- * Cannot currently create new arrays when keys are integer. Unsure if this is wanted.
- **/
+ * Mutate an object's deeply nested property.
+ * Will respect existing arrays and coerce keys to integers when applicable, and create
+ * arrays if the type of that path segment is `array`.
+ */
 export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj => {
   // Finished recursing and didn't set?
   if (path.length === 0) throw new Error('Empty path')
@@ -175,6 +205,16 @@ export const setDeepProp = (obj: Obj, path: PathSegment[], value: unknown): Obj 
   }
 }
 
+/**
+ * Check if an array begins with the same elements as another array.
+ *
+ * @param array1 The full array to check against
+ * @param array2 The array that may match the start of array1
+ *
+ * @example
+ * arrayStartsWith(['a', 'b', 'c'], ['a', 'b']) === true
+ * arrayStartsWith(['a', 'b', 'c'], ['a', 'x']) === false
+ */
 export const arrayStartsWith = (array1: Array<string | number>, array2: Array<string | number>) => {
   if (array1.length < array2.length) return false
 
@@ -192,6 +232,9 @@ const isPrimitive = (value: unknown): value is Primitive => value === null || va
 const isDateObject = (value: unknown): value is Date => value instanceof Date
 const isObject = <T extends object>(value: unknown): value is T => value !== null && value !== undefined && !Array.isArray(value) && typeof value === 'object' && !isDateObject(value)
 
+/**
+ * Recursively check if two objects (or arrays) are deeply equal to each other.
+ */
 export const deepEqual = (object1: any, object2: any) => {
   if (isPrimitive(object1) || isPrimitive(object2)) {
     return object1 === object2

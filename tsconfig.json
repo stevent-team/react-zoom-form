@@ -14,5 +14,6 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true
-  }
+  },
+  "exclude": ["**/dist/*"]
 }
