@@ -17,7 +17,7 @@
     "build": "tsc && vite build",
     "build:examples": "tsc && vite build -m examples",
     "test": "vitest",
-    "lint": "eslint lib test example --max-warnings 0",
+    "lint": "eslint lib examples --max-warnings 0",
     "ci:release": "yarn build && yarn changeset publish"
   },
   "type": "module",
