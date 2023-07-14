@@ -34,7 +34,7 @@ export interface UseFormReturn<Schema extends z.AnyZodObject> {
   reset: (values?: RecursivePartial<z.TypeOf<Schema>>) => void
 }
 
-export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
+export type SubmitHandler<Schema extends z.AnyZodObject = z.AnyZodObject> = (values: z.infer<Schema>) => void
 
 export type FieldRefs = Record<string, { path: PathSegment[], ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement }>
 

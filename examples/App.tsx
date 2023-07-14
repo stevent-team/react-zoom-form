@@ -1,13 +1,14 @@
 import { Route, Switch, Link, useLocation } from 'wouter'
 import KitchenSink from './kitchen-sink'
 import Basic from './basic'
+import { SubmitHandler } from '@stevent-team/react-zoom-form'
 
 const GITHUB = 'https://github.com/stevent-team/react-zoom-form'
 
 interface Example {
   name: string
   path: string
-  component: () => JSX.Element
+  component: ({ onSubmit }: { onSubmit: SubmitHandler }) => JSX.Element
 }
 
 const EXAMPLES: Example[] = [
@@ -22,6 +23,11 @@ const EXAMPLES: Example[] = [
     component: KitchenSink,
   },
 ]
+
+// Shared submit handler
+const onSubmit: SubmitHandler = values => {
+  console.log(values)
+}
 
 const App = () => {
   const [location] = useLocation()
@@ -44,7 +50,9 @@ const App = () => {
 
     <main>
       <Switch>
-        {EXAMPLES.map((example, i) => <Route key={example.path} path={i === 0 ? '/' : example.path} component={example.component} />)}
+        {EXAMPLES.map((example, i) => <Route key={example.path} path={i === 0 ? '/' : example.path}>
+          <example.component onSubmit={onSubmit} />
+        </Route>)}
 
         <Route>Example not found</Route>
       </Switch>

@@ -2,17 +2,13 @@ import { SubmitHandler, useForm, Errors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
 import Output from '../Output'
 
-const schema = z.object({
+export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   age: z.coerce.number().min(13),
 })
 
-const Basic = () => {
+const Basic = ({ onSubmit }: { onSubmit: SubmitHandler<typeof schema> }) => {
   const { fields, handleSubmit, isDirty } = useForm({ schema })
-
-  const onSubmit: SubmitHandler<typeof schema> = values => {
-    console.log(values)
-  }
 
   return <>
     <form onSubmit={handleSubmit(onSubmit)}>
