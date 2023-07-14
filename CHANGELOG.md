@@ -1,5 +1,17 @@
 # @stevent-team/react-zoom-form
 
+## 1.0.0
+
+### Major Changes
+
+- f81a532: Rename `FieldControls` type to `Field`
+- f81a532: Stable release!
+- f81a532: Rename `Field` type to `ControlledField`
+
+### Minor Changes
+
+- e7966d6: Add Errors component to display simple field errors
+
 ## 0.4.0
 
 ### Minor Changes
