@@ -1,6 +1,6 @@
 import { SubmitHandler, useForm, ControlledField, controlled, getValue, Errors } from '@stevent-team/react-zoom-form'
 import { z } from 'zod'
-import Output from '../components/Output'
+import Output from '../Output'
 
 const schema = z.object({
   requiredString: z.string().trim().min(1, 'This field is required').default(''),

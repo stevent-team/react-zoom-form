@@ -1,5 +1,8 @@
 import { Route, Switch, Link, useLocation } from 'wouter'
 import KitchenSink from './kitchen-sink'
+import Basic from './basic'
+
+const GITHUB = 'https://github.com/stevent-team/react-zoom-form'
 
 interface Example {
   name: string
@@ -8,6 +11,11 @@ interface Example {
 }
 
 const EXAMPLES: Example[] = [
+  {
+    name: 'Basic',
+    path: '/basic',
+    component: Basic,
+  },
   {
     name: 'Kitchen Sink',
     path: '/kitchen-sink',
@@ -20,15 +28,15 @@ const App = () => {
 
   return <>
     <nav>
-      {'🏎️ '}<a href="https://github.com/stevent-team/react-zoom-form" target="_blank" rel="nofollow noreferrer">React Zoom Form</a>
+      {'🏎️ '}<a href={GITHUB} target="_blank" rel="nofollow noreferrer">React Zoom Form</a>
       <h2>Examples</h2>
       <ul>
-        {EXAMPLES.map(example => {
-          const active = location.startsWith(example.path)
+        {EXAMPLES.map((example, i) => {
+          const active = location === (i === 0 ? '/' : example.path)
 
           return <li key={example.path} className={active ? 'active' : undefined}>
-            {active ? <span>{example.name}</span> : <Link to={example.path}>{example.name}</Link>}
-            {' '}(<a href={`https://github.com/stevent-team/react-zoom-form/blob/main/examples${example.path}/index.tsx`} target="_blank" rel="nofollow noreferrer">code</a>)
+            {active ? <span>{example.name}</span> : <Link to={i === 0 ? '/' : example.path}>{example.name}</Link>}
+            {' '}(<a href={`${GITHUB}/blob/main/examples${example.path}`} target="_blank" rel="nofollow noreferrer">code</a>)
           </li>
         })}
       </ul>
@@ -36,7 +44,7 @@ const App = () => {
 
     <main>
       <Switch>
-        {EXAMPLES.map(example => <Route key={example.path} path={example.path} component={example.component} />)}
+        {EXAMPLES.map((example, i) => <Route key={example.path} path={i === 0 ? '/' : example.path} component={example.component} />)}
 
         <Route>Example not found</Route>
       </Switch>
