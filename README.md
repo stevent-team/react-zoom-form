@@ -367,7 +367,7 @@ If you also need access to the `ref` of an input you're using `register()` on, y
 ```tsx
 const { fields } = useForm({ schema })
 
-const myInputRef = useRef<HTMLInputElement>()
+const myInputRef = useRef<HTMLInputElement>(null)
 
 return <form>
   <input {...fields.myInput.register({ ref: myInputRef })} />
