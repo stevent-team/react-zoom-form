@@ -1,4 +1,4 @@
-# React Zoom Form <img width="400" align="right" src="https://github.com/stevent-team/react-zoom-form/assets/16392483/e7898088-ccfc-4899-9f35-a32faaf8964c" alt="car">
+# React Zoom Form <img width="300" align="right" src="https://github.com/stevent-team/react-zoom-form/assets/16392483/e7898088-ccfc-4899-9f35-a32faaf8964c" alt="car">
 
 [![npm version](https://img.shields.io/npm/v/@stevent-team/react-zoom-form)](https://www.npmjs.com/package/@stevent-team/react-zoom-form)
 [![minzip size](https://img.shields.io/bundlephobia/minzip/@stevent-team/react-zoom-form)](https://bundlephobia.com/package/@stevent-team/react-zoom-form)
