@@ -360,6 +360,25 @@ return <form>
 </form>
 ```
 
+### Custom Reference
+
+If you also need access to the `ref` of an input you're using `register()` on, you can pass it to the options of register like so:
+
+```tsx
+const { fields } = useForm({ schema })
+
+const myInputRef = useRef<HTMLInputElement>(null)
+
+return <form>
+  <input {...fields.myInput.register({ ref: myInputRef })} />
+
+  <button
+    type="button"
+    onClick={() => myInputRef.current.focus()}
+  >Focus my input</button>
+</form>
+```
+
 ### Tips
 
 - If you're computing your schema inside the react component that calls `useForm`, be sure to memoize the schema so rerenders of the component do not recalculate the schema. This also goes for `initialValues`.
@@ -392,7 +411,7 @@ The `fields` object will match the shape of your Zod schema, and also provides a
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `register` | `() => ReturnType<RegisterFn>` | Returns `onChange`, `name` and `ref` props that you can pass to a native `input`, `textarea` or `select` element. |
+| `register` | `(options?: RegisterOptions) => ReturnType<RegisterFn>` | Takes options and returns `onChange`, `name` and `ref` props that you can pass to a native `input`, `textarea` or `select` element. |
 | `name` | `() => string` | Returns a unique name for this field. Useful for linking `label` elements. |
 
 ### `controlled`
