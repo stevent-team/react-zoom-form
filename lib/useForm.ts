@@ -57,6 +57,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
   const isDirty = useMemo(() => !deepEqual(formValue, internalInitialValues), [formValue, internalInitialValues])
 
   const reset = useCallback<UseFormReturn<Schema>['reset']>((values = initialValues) => {
+    setValidateOnChange(false)
     setInternalInitialValues(values)
     setFormValue(values)
   }, [initialValues])
