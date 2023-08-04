@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 1.1.1
+
+### Patch Changes
+
+- 9c2a91f: Remove unnecessary NonNullable on field chain
+
 ## 1.1.0
 
 ### Minor Changes
