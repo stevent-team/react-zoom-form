@@ -10,7 +10,7 @@ type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
   : LeafValue
 
-export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<NonNullable<Schema>, {
+export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<Schema, {
   /**
    * Provides props to pass to native elements (input, textarea, select)
    *
