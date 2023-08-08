@@ -8,6 +8,7 @@ type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
   : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
   : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
+  : Schema extends (z.ZodEffects<any>) ? FieldChain<Schema['_def']['schema']>
   : LeafValue
 
 export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<Schema, {

@@ -6,6 +6,7 @@ import Basic from './basic'
 import Arrays from './arrays'
 import Nested from './nested'
 import Coerced from './coerced'
+import Conditional from './conditional'
 import KitchenSink from './kitchen-sink'
 
 interface Example {
@@ -34,6 +35,11 @@ const EXAMPLES: Example[] = [
     name: 'Coerced fields',
     path: '/coerced',
     component: Coerced,
+  },
+  {
+    name: 'Conditional field',
+    path: '/conditional',
+    component: Conditional,
   },
   {
     name: 'Kitchen Sink',
