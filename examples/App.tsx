@@ -4,6 +4,7 @@ import { repository } from '../package.json'
 
 import Basic from './basic'
 import Arrays from './arrays'
+import Nested from './nested'
 import KitchenSink from './kitchen-sink'
 
 interface Example {
@@ -19,9 +20,14 @@ const EXAMPLES: Example[] = [
     component: Basic,
   },
   {
-    name: 'Arrays',
+    name: 'Array field',
     path: '/arrays',
     component: Arrays,
+  },
+  {
+    name: 'Nested fields',
+    path: '/nested',
+    component: Nested,
   },
   {
     name: 'Kitchen Sink',

@@ -53,6 +53,15 @@ form > label {
   margin-block: 1em .2em;
 }
 
+fieldset {
+  margin-block-end: 1em;
+}
+
+fieldset > label {
+  display: block;
+  margin-block: .5em;
+}
+
 input:not([type=checkbox]):not([type=radio]), textarea, select {
   font: inherit;
   padding: .4em .5em;
