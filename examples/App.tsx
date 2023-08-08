@@ -1,9 +1,10 @@
 import { Route, Switch, Link, useLocation } from 'wouter'
-import KitchenSink from './kitchen-sink'
-import Basic from './basic'
 import { SubmitHandler } from '@stevent-team/react-zoom-form'
+import { repository } from '../package.json'
 
-const GITHUB = 'https://github.com/stevent-team/react-zoom-form'
+import Basic from './basic'
+import Arrays from './arrays'
+import KitchenSink from './kitchen-sink'
 
 interface Example {
   name: string
@@ -16,6 +17,11 @@ const EXAMPLES: Example[] = [
     name: 'Basic',
     path: '/basic',
     component: Basic,
+  },
+  {
+    name: 'Arrays',
+    path: '/arrays',
+    component: Arrays,
   },
   {
     name: 'Kitchen Sink',
@@ -34,7 +40,7 @@ const App = () => {
 
   return <>
     <nav>
-      {'🏎️ '}<a href={GITHUB} target="_blank" rel="nofollow noreferrer">React Zoom Form</a>
+      {'🏎️ '}<a href={repository} target="_blank" rel="nofollow noreferrer">React Zoom Form</a>
       <h2>Examples</h2>
       <ul>
         {EXAMPLES.map((example, i) => {
@@ -42,7 +48,7 @@ const App = () => {
 
           return <li key={example.path} className={active ? 'active' : undefined}>
             {active ? <span>{example.name}</span> : <Link to={i === 0 ? '/' : example.path}>{example.name}</Link>}
-            {' '}(<a href={`${GITHUB}/blob/main/examples${example.path}`} target="_blank" rel="nofollow noreferrer">code</a>)
+            {' '}(<a href={`${repository}/blob/main/examples${example.path}`} target="_blank" rel="nofollow noreferrer">code</a>)
           </li>
         })}
       </ul>
