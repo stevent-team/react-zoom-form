@@ -44,12 +44,18 @@ export type ControlledField<T> = {
   errors: z.ZodIssue[]
 }
 
+/** Options that can be passed to the register fn. */
+export type RegisterOptions = {
+  ref?: React.ForwardedRef<any>
+}
+
 /** Type of the `.register()` function for native elements. */
 export type RegisterFn = (
   path: PathSegment[],
   schema: z.ZodType,
   setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>,
   fieldRefs: React.MutableRefObject<FieldRefs>,
+  options: RegisterOptions,
 ) => {
   onChange: React.ChangeEventHandler<any>
   ref: React.Ref<any>
@@ -57,7 +63,7 @@ export type RegisterFn = (
 }
 
 // Register for native elements (input, textarea, select)
-export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs) => {
+export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs, options) => {
   const name = path.map(p => p.key).join('.')
   const unwrapped = unwrapZodType(fieldSchema)
 
@@ -77,6 +83,15 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs)
     ref: ref => {
       // Store field ref in an object to dedupe them per field
       if (ref) {
+        // If the user has provided their own ref to use as well
+        if (options.ref) {
+          if (typeof options.ref === 'function') {
+            options.ref(ref)
+          } else {
+            options.ref.current = ref
+          }
+        }
+
         // Note, radio fields use the same name per group, so they have to be referenced by value
         const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
         fieldRefs.current[refIndex] = { path, ref }

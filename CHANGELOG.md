@@ -1,5 +1,22 @@
 # @stevent-team/react-zoom-form
 
+## 1.1.1
+
+### Patch Changes
+
+- 9c2a91f: Remove unnecessary NonNullable on field chain
+
+## 1.1.0
+
+### Minor Changes
+
+- bb63c81: Support passing a custom ref into registered elements
+
+### Patch Changes
+
+- 50b5f21: Disable validation on change after a reset until the next submit event
+- bb41db3: Update packages
+
 ## 1.0.0
 
 ### Major Changes

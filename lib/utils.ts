@@ -1,4 +1,4 @@
-import { Field, FieldRefs, RegisterFn } from '.'
+import { Field, FieldRefs, RegisterFn, RegisterOptions } from '.'
 import { z } from 'zod'
 
 // Creates the type for the field chain by recusively travelling through the Zod schema
@@ -10,14 +10,14 @@ type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
   : LeafValue
 
-export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<NonNullable<Schema>, {
+export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<Schema, {
   /**
    * Provides props to pass to native elements (input, textarea, select)
    *
    * @example
    * <input type="text" {...fields.firstName.register()} />
    */
-  register: () => ReturnType<RegisterFn>
+  register: (options?: RegisterOptions) => ReturnType<RegisterFn>
   /**
    * Get the name of this field used by the register function.
    *
@@ -102,7 +102,7 @@ export const fieldChain = <S extends z.ZodType>(
       // If the current Zod schema is not an array or object, we must be at a leaf node
       if (!(unwrapped instanceof z.ZodObject)) {
         // Leaf node functions
-        if (key === 'register') return () => register(path, schema, controls.setFormValue, fieldRefs)
+        if (key === 'register') return (options: RegisterOptions = {}) => register(path, schema, controls.setFormValue, fieldRefs, options)
         if (key === 'name') return () => path.map(p => p.key).join('.')
 
         // Attempted to access a property that didn't exist
@@ -110,7 +110,7 @@ export const fieldChain = <S extends z.ZodType>(
       }
 
       return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
-    },
+    }
   }) as unknown // Never let them know your next move...
 
 type Obj = Record<string, unknown> | unknown[]

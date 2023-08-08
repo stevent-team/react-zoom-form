@@ -1,4 +1,4 @@
-# 🏎️ React Zoom Form
+# React Zoom Form <img width="300" align="right" src="https://github.com/stevent-team/react-zoom-form/assets/16392483/e7898088-ccfc-4899-9f35-a32faaf8964c" alt="car">
 
 [![npm version](https://img.shields.io/npm/v/@stevent-team/react-zoom-form)](https://www.npmjs.com/package/@stevent-team/react-zoom-form)
 [![minzip size](https://img.shields.io/bundlephobia/minzip/@stevent-team/react-zoom-form)](https://bundlephobia.com/package/@stevent-team/react-zoom-form)
@@ -360,6 +360,25 @@ return <form>
 </form>
 ```
 
+### Custom Reference
+
+If you also need access to the `ref` of an input you're using `register()` on, you can pass it to the options of register like so:
+
+```tsx
+const { fields } = useForm({ schema })
+
+const myInputRef = useRef<HTMLInputElement>(null)
+
+return <form>
+  <input {...fields.myInput.register({ ref: myInputRef })} />
+
+  <button
+    type="button"
+    onClick={() => myInputRef.current.focus()}
+  >Focus my input</button>
+</form>
+```
+
 ### Tips
 
 - If you're computing your schema inside the react component that calls `useForm`, be sure to memoize the schema so rerenders of the component do not recalculate the schema. This also goes for `initialValues`.
@@ -392,7 +411,7 @@ The `fields` object will match the shape of your Zod schema, and also provides a
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `register` | `() => ReturnType<RegisterFn>` | Returns `onChange`, `name` and `ref` props that you can pass to a native `input`, `textarea` or `select` element. |
+| `register` | `(options?: RegisterOptions) => ReturnType<RegisterFn>` | Takes options and returns `onChange`, `name` and `ref` props that you can pass to a native `input`, `textarea` or `select` element. |
 | `name` | `() => string` | Returns a unique name for this field. Useful for linking `label` elements. |
 
 ### `controlled`
@@ -471,4 +490,6 @@ This library uses [changesets](https://github.com/changesets/changesets), if the
 
 ## License
 
-Created by Stevent and licensed under MIT
+**React Zoom Form** is created by [Stevent](https://github.com/stevent-team) and licensed under MIT
+
+*Car image created by [Ewan Breakey](https://ewanb.me) and licensed under [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)*
