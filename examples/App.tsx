@@ -5,6 +5,7 @@ import { repository } from '../package.json'
 import Basic from './basic'
 import Arrays from './arrays'
 import Nested from './nested'
+import Coerced from './coerced'
 import KitchenSink from './kitchen-sink'
 
 interface Example {
@@ -30,6 +31,11 @@ const EXAMPLES: Example[] = [
     component: Nested,
   },
   {
+    name: 'Coerced fields',
+    path: '/coerced',
+    component: Coerced,
+  },
+  {
     name: 'Kitchen Sink',
     path: '/kitchen-sink',
     component: KitchenSink,
@@ -39,6 +45,7 @@ const EXAMPLES: Example[] = [
 // Shared submit handler
 const onSubmit: SubmitHandler = values => {
   console.log(values)
+  document.dispatchEvent(new CustomEvent('zoomSubmit', { detail: values }))
 }
 
 const App = () => {
