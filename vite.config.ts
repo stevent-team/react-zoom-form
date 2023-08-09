@@ -3,10 +3,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    dts({ insertTypesEntry: true, include: 'lib/**' }),
+    ...mode !== 'examples' ? [dts({ insertTypesEntry: true, include: 'lib/**' })] : [],
   ],
   resolve: {
     alias: {
@@ -14,26 +14,28 @@ export default defineConfig({
     }
   },
   build: {
-    lib: {
-      entry: resolve(__dirname, 'lib/index.ts'),
-      name: 'react-zoom-form',
-      fileName: 'react-zoom-form',
-    },
-    rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'zod'],
-      output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-          'react/jsx-runtime': 'react/jsx-runtime',
-          zod: 'z',
+    ...mode !== 'examples' && {
+      lib: {
+        entry: resolve(__dirname, 'lib/index.ts'),
+        name: 'react-zoom-form',
+        fileName: 'react-zoom-form',
+      },
+      rollupOptions: {
+        external: ['react', 'react-dom', 'react/jsx-runtime', 'zod'],
+        output: {
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+            'react/jsx-runtime': 'react/jsx-runtime',
+            zod: 'z',
+          }
         }
-      }
+      },
     },
   },
   test: {
     environment: 'happy-dom',
     globals: true,
-    setupFiles: './test/setup.ts',
+    setupFiles: './examples/setupTests.ts',
   }
-})
+}))

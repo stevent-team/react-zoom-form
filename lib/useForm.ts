@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, FieldChain, isCheckbox, isRadio } from './utils'
 import { register } from './field'
 
-export interface UseFormOptions<Schema extends z.AnyZodObject> {
+export interface UseFormOptions<Schema extends z.ZodTypeAny> {
   /**
    * The zod schema to use when parsing the values.
    *
@@ -16,7 +16,7 @@ export interface UseFormOptions<Schema extends z.AnyZodObject> {
   initialValues?: RecursivePartial<z.infer<Schema>>
 }
 
-export interface UseFormReturn<Schema extends z.AnyZodObject> {
+export interface UseFormReturn<Schema extends z.ZodTypeAny> {
   /** Access zod schema and registration functions for your fields. */
   fields: FieldChain<Schema>
   /**
@@ -34,14 +34,14 @@ export interface UseFormReturn<Schema extends z.AnyZodObject> {
   reset: (values?: RecursivePartial<z.TypeOf<Schema>>) => void
 }
 
-export type SubmitHandler<Schema extends z.AnyZodObject> = (values: z.infer<Schema>) => void
+export type SubmitHandler<Schema extends z.ZodTypeAny = z.ZodTypeAny> = (values: z.infer<Schema>) => void
 
 export type FieldRefs = Record<string, { path: PathSegment[], ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement }>
 
 /**
  * Hook used to control a form. Takes configuration options and returns an object with state and methods.
  */
-export const useForm = <Schema extends z.AnyZodObject>({
+export const useForm = <Schema extends z.ZodTypeAny>({
   schema,
   initialValues = {},
 }: UseFormOptions<Schema>) => {
@@ -103,7 +103,7 @@ export const useForm = <Schema extends z.AnyZodObject>({
     setValidateOnChange(true)
   }, [validate])
 
-  const fields = useMemo(() => new Proxy(schema.shape, {
+  const fields = useMemo(() => new Proxy({}, {
     get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors })[key]
   }) as FieldChain<Schema>, [schema, formValue, formErrors])
 

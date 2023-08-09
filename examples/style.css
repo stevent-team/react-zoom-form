@@ -1,0 +1,105 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+#app {
+  display: flex;
+  padding: 2em;
+  box-sizing: border-box;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 2em;
+  flex-wrap: wrap;
+}
+
+nav h2 {
+  margin-block-start: .3rem;
+}
+
+nav li {
+  line-height: 1.5;
+}
+
+nav li.active span {
+  font-weight: 600;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 0 2em;
+  flex-wrap: wrap;
+}
+
+h1 {
+  margin-block-start: 0;
+}
+
+form, output {
+  width: 500px;
+  max-width: calc(100vw - 4em);
+}
+
+form > label {
+  display: flex;
+  gap: .5em;
+  margin-block: 1em .2em;
+}
+
+fieldset {
+  margin-block-end: 1em;
+}
+
+fieldset > label {
+  display: block;
+  margin-block: .5em;
+}
+
+input:not([type=checkbox]):not([type=radio]), textarea, select {
+  font: inherit;
+  padding: .4em .5em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  margin-block: 2em;
+  width: 100%;
+  font: inherit;
+  padding: .5em;
+}
+
+.error {
+  font-size: .8em;
+  color: darkred;
+}
+
+output {
+  font-family: monospace;
+  white-space: pre;
+  overflow-x: auto;
+  background: #EEE;
+  padding: .5em 1em;
+  box-sizing: border-box;
+  border-radius: .3em;
+}
+
+output div {
+  margin-block: .5em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: lightcoral;
+  }
+  output {
+    background: #222;
+  }
+}
