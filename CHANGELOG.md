@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 1.1.2
+
+### Patch Changes
+
+- d7721ea: Update types to allow any zod type as a schema
+
 ## 1.1.1
 
 ### Patch Changes
