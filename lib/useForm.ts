@@ -45,7 +45,20 @@ export const useForm = <Schema extends z.ZodTypeAny>({
   schema,
   initialValues = {},
 }: UseFormOptions<Schema>) => {
-  const [formValue, setFormValue] = useState(structuredClone(initialValues))
+  const [formValueState, _setFormValue] = useState(structuredClone(initialValues))
+  const formValue = useRef(structuredClone(initialValues))
+
+  // Set the form value state and ref
+  const setFormValue = useCallback<typeof _setFormValue>(value => {
+    if (typeof value === 'function') {
+      _setFormValue(value(formValue.current))
+      formValue.current = value(formValue.current)
+    } else {
+      _setFormValue(value)
+      formValue.current = value
+    }
+  }, [])
+
   const [formErrors, setFormErrors] = useState<z.ZodError<z.infer<Schema>>>()
   const fieldRefs = useRef<FieldRefs>({})
 
@@ -54,7 +67,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
 
   // Keep track of the initial form values to calculate isDirty
   const [internalInitialValues, setInternalInitialValues] = useState(structuredClone(initialValues))
-  const isDirty = useMemo(() => !deepEqual(formValue, internalInitialValues), [formValue, internalInitialValues])
+  const isDirty = useMemo(() => !deepEqual(formValueState, internalInitialValues), [formValueState, internalInitialValues])
 
   const reset = useCallback<UseFormReturn<Schema>['reset']>((values = initialValues) => {
     setValidateOnChange(false)
@@ -64,14 +77,14 @@ export const useForm = <Schema extends z.ZodTypeAny>({
 
   // Validate by parsing form data with zod schema, and return parsed data if valid
   const validate = useCallback(async () => {
-    const parsed = await schema.safeParseAsync(formValue)
+    const parsed = await schema.safeParseAsync(formValue.current)
     if (parsed.success) {
       setFormErrors(undefined)
       return parsed.data
     } else {
       setFormErrors(parsed.error)
     }
-  }, [schema, formValue])
+  }, [schema])
 
   // Watch for changes in value
   useEffect(() => {
@@ -79,7 +92,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
 
     // Set registered field values
     Object.values(fieldRefs.current).forEach(({ path, ref }) => {
-      const value = getDeepProp(formValue, path) as string | boolean | undefined
+      const value = getDeepProp(formValueState, path) as string | boolean | undefined
       if (isRadio(ref)) {
         if (ref.value === value) {
           ref.checked = true
@@ -92,7 +105,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
         ref.value = String(value ?? '')
       }
     })
-  }, [formValue, validateOnChange, validate])
+  }, [formValueState, validateOnChange, validate])
 
   // Submit handler
   const handleSubmit = useCallback<UseFormReturn<Schema>['handleSubmit']>(handler => async e => {
@@ -105,7 +118,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
 
   const fields = useMemo(() => new Proxy({}, {
     get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors })[key]
-  }) as FieldChain<Schema>, [schema, formValue, formErrors])
+  }) as FieldChain<Schema>, [schema, setFormValue, formErrors])
 
   return {
     fields,

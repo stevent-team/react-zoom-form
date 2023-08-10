@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PartialObject, PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
+import { NonUndefined, PartialObject, PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
 import { FieldRefs } from './useForm'
 
 /** The controls that each path along the field chain can access under `_field`. */
@@ -7,7 +7,7 @@ export type Field<Schema extends z.ZodType = z.ZodType> = {
   _field: {
     schema: Schema
     path: PathSegment[]
-    formValue: RecursivePartial<z.ZodType>
+    formValue: React.MutableRefObject<RecursivePartial<z.TypeOf<Schema>>>
     setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
     formErrors: z.ZodError<z.ZodType> | undefined
   }
@@ -112,13 +112,13 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs,
  * <CustomField {...controlled(fields.myCustomField)} />
  * ```
  */
-export const controlled = <T>({ _field }: Field<z.ZodType<NonNullable<T>>>): ControlledField<NonNullable<T>> => {
+export const controlled = <T>({ _field }: Field<z.ZodType<NonUndefined<T>>>): ControlledField<NonUndefined<T>> => {
   const { schema, path, formValue, setFormValue, formErrors } = _field
 
   return {
     schema,
     name: path.map(p => p.key).join('.'),
-    value: getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined,
+    value: getDeepProp(formValue.current, path) as PartialObject<NonUndefined<T>> | undefined,
     onChange: value => setFormValue(v => setDeepProp(v, path, value) as typeof v),
     errors: formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? [],
   }
@@ -148,7 +148,7 @@ export const fieldErrors = <T>({ _field: { formErrors, path } }: Field<z.ZodType
  * ```
  */
 export const getValue = <T>({ _field: { formValue, path } }: Field<z.ZodType<T>>) =>
-  getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined
+  getDeepProp(formValue.current, path) as PartialObject<NonUndefined<T>> | undefined
 
 /**
  * Set the value of a field directly.
@@ -161,10 +161,10 @@ export const getValue = <T>({ _field: { formValue, path } }: Field<z.ZodType<T>>
  */
 export const setValue = <T>(
   { _field: { setFormValue, path } }: Field<z.ZodType<T>>,
-  newValue: PartialObject<NonNullable<T>> | undefined | ((currentValue: PartialObject<NonNullable<T>> | undefined) => PartialObject<NonNullable<T>> | undefined)
+  newValue: PartialObject<NonUndefined<T>> | undefined | ((currentValue: PartialObject<NonUndefined<T>> | undefined) => PartialObject<NonUndefined<T>> | undefined)
 ) => {
   if (typeof newValue === 'function') {
-    setFormValue(v => setDeepProp(v, path, newValue(getDeepProp(v, path) as PartialObject<NonNullable<T>> | undefined)) as typeof v)
+    setFormValue(v => setDeepProp(v, path, newValue(getDeepProp(v, path) as PartialObject<NonUndefined<T>> | undefined)) as typeof v)
   } else {
     setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
   }

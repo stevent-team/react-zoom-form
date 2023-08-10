@@ -1,14 +1,16 @@
 import { Field, FieldRefs, RegisterFn, RegisterOptions } from '.'
 import { z } from 'zod'
 
+type AnyZodContainer = z.AnyZodObject | z.AnyZodTuple | z.ZodArray<any>
+
 // Creates the type for the field chain by recusively travelling through the Zod schema
 type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   z.infer<Schema> extends LeafValue ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['_type'][K]> }
   : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
   : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
-  : Schema extends (z.ZodDefault<any> | z.ZodOptional<any> | z.ZodNullable<any>) ? FieldChain<Schema['_def']['innerType']>
-  : Schema extends (z.ZodEffects<any>) ? FieldChain<Schema['_def']['schema']>
+  : Schema extends (z.ZodDefault<AnyZodContainer> | z.ZodOptional<AnyZodContainer> | z.ZodNullable<AnyZodContainer>) ? FieldChain<Schema['_def']['innerType']>
+  : Schema extends (z.ZodEffects<AnyZodContainer>) ? FieldChain<Schema['_def']['schema']>
   : LeafValue
 
 export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<Schema, {
@@ -41,6 +43,9 @@ export type RecursivePartial<T> = {
 
 /** Same behaviour as Partial but does not affect arrays. */
 export type PartialObject<T> = T extends any[] ? T : Partial<T>
+
+/** Excludes undefined from a type, but keeps null */
+export type NonUndefined<T> = T extends undefined ? never : T
 
 export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
