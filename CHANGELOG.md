@@ -1,5 +1,12 @@
 # @stevent-team/react-zoom-form
 
+## 1.1.3
+
+### Patch Changes
+
+- 55e323b: Store formValues in a ref to prevent unnecessary rerenders
+- b9a77a9: Fix an issue where controlled fields with a nullable value would break the types
+
 ## 1.1.2
 
 ### Patch Changes
