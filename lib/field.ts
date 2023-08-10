@@ -7,7 +7,7 @@ export type Field<Schema extends z.ZodType = z.ZodType> = {
   _field: {
     schema: Schema
     path: PathSegment[]
-    formValue: RecursivePartial<z.ZodType>
+    formValue: React.MutableRefObject<RecursivePartial<z.TypeOf<Schema>>>
     setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
     formErrors: z.ZodError<z.ZodType> | undefined
   }
@@ -118,7 +118,7 @@ export const controlled = <T>({ _field }: Field<z.ZodType<NonNullable<T>>>): Con
   return {
     schema,
     name: path.map(p => p.key).join('.'),
-    value: getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined,
+    value: getDeepProp(formValue.current, path) as PartialObject<NonNullable<T>> | undefined,
     onChange: value => setFormValue(v => setDeepProp(v, path, value) as typeof v),
     errors: formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? [],
   }
@@ -148,7 +148,7 @@ export const fieldErrors = <T>({ _field: { formErrors, path } }: Field<z.ZodType
  * ```
  */
 export const getValue = <T>({ _field: { formValue, path } }: Field<z.ZodType<T>>) =>
-  getDeepProp(formValue, path) as PartialObject<NonNullable<T>> | undefined
+  getDeepProp(formValue.current, path) as PartialObject<NonNullable<T>> | undefined
 
 /**
  * Set the value of a field directly.
