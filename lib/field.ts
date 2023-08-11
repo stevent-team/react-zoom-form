@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { NonUndefined, PartialObject, PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, isRadio, setDeepProp, unwrapZodType } from './utils'
-import { FieldRefs } from './useForm'
+import { NonUndefined, PartialObject, PathSegment, RecursivePartial, arrayStartsWith, getDeepProp, setDeepProp } from './utils'
 
 /** The controls that each path along the field chain can access under `_field`. */
 export type Field<Schema extends z.ZodType = z.ZodType> = {
@@ -35,71 +34,13 @@ export type ControlledField<T> = {
    */
   name: string
   /** The zod schema for this field. */
-  schema: z.ZodType<T>
+  schema: z.ZodType<T | undefined>
   /** Reactive value of this field. */
   value: PartialObject<T> | undefined
   /** Takes a new value to set `value` of this field. */
   onChange: (value: PartialObject<T> | undefined) => void
   /** Array of ZodIssues for this field. */
   errors: z.ZodIssue[]
-}
-
-/** Options that can be passed to the register fn. */
-export type RegisterOptions = {
-  ref?: React.ForwardedRef<any>
-}
-
-/** Type of the `.register()` function for native elements. */
-export type RegisterFn = (
-  path: PathSegment[],
-  schema: z.ZodType,
-  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>,
-  fieldRefs: React.MutableRefObject<FieldRefs>,
-  options: RegisterOptions,
-) => {
-  onChange: React.ChangeEventHandler<any>
-  ref: React.Ref<any>
-  name: string
-}
-
-// Register for native elements (input, textarea, select)
-export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs, options) => {
-  const name = path.map(p => p.key).join('.')
-  const unwrapped = unwrapZodType(fieldSchema)
-
-  return {
-    onChange: e => {
-      let newValue: string | boolean | undefined = e.currentTarget.value
-      if (!(unwrapped instanceof z.ZodString) && newValue === '') {
-        newValue = undefined
-      }
-      // If this field uses a checkbox, read it's `checked` state
-      if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
-        newValue = e.currentTarget.checked
-      }
-      setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
-    },
-    name,
-    ref: ref => {
-      // Store field ref in an object to dedupe them per field
-      if (ref) {
-        // If the user has provided their own ref to use as well
-        if (options.ref) {
-          if (typeof options.ref === 'function') {
-            options.ref(ref)
-          } else {
-            options.ref.current = ref
-          }
-        }
-
-        // Note, radio fields use the same name per group, so they have to be referenced by value
-        const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
-        fieldRefs.current[refIndex] = { path, ref }
-      } else {
-        delete fieldRefs.current[name]
-      }
-    },
-  } satisfies React.ComponentProps<'input'>
 }
 
 /**
@@ -112,11 +53,11 @@ export const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs,
  * <CustomField {...controlled(fields.myCustomField)} />
  * ```
  */
-export const controlled = <T>({ _field }: Field<z.ZodType<NonUndefined<T>>>): ControlledField<NonUndefined<T>> => {
+export const controlled = <T>({ _field }: Field<z.ZodType<T>>): ControlledField<NonUndefined<T>> => {
   const { schema, path, formValue, setFormValue, formErrors } = _field
 
   return {
-    schema,
+    schema: schema as z.ZodType<NonUndefined<T>, z.ZodTypeDef, NonUndefined<T>>,
     name: path.map(p => p.key).join('.'),
     value: getDeepProp(formValue.current, path) as PartialObject<NonUndefined<T>> | undefined,
     onChange: value => setFormValue(v => setDeepProp(v, path, value) as typeof v),

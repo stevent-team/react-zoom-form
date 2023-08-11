@@ -32,13 +32,8 @@ const initialValues = {
   defaultString: 'Default value',
 }
 
-const KitchenSink = () => {
-  const { fields, handleSubmit, isDirty, reset } = useForm({ schema, initialValues })
-
-  const onSubmit: SubmitHandler<typeof schema> = values => {
-    console.log(values)
-    reset(values)
-  }
+const KitchenSink = ({ onSubmit }: { onSubmit: SubmitHandler<typeof schema> }) => {
+  const { fields, handleSubmit, isDirty } = useForm({ schema, initialValues })
 
   return <>
     <form onSubmit={handleSubmit(onSubmit)}>

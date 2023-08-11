@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 
-import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, FieldChain, isCheckbox, isRadio } from './utils'
-import { register } from './field'
+import { PathSegment, RecursivePartial, fieldChain, getDeepProp, deepEqual, FieldChain, isCheckbox, isRadio, unwrapZodType, setDeepProp } from './utils'
 
 export interface UseFormOptions<Schema extends z.ZodTypeAny> {
   /**
@@ -118,7 +117,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
 
   const fields = useMemo(() => new Proxy({}, {
     get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors })[key]
-  }) as FieldChain<Schema>, [schema, setFormValue, formErrors])
+  }) as unknown as FieldChain<Schema>, [schema, setFormValue, formErrors])
 
   return {
     fields,
@@ -126,4 +125,62 @@ export const useForm = <Schema extends z.ZodTypeAny>({
     isDirty,
     reset,
   }
+}
+
+/** Options that can be passed to the register fn. */
+export type RegisterOptions = {
+  ref?: React.ForwardedRef<any>
+}
+
+/** Type of the `.register()` function for native elements. */
+export type RegisterFn = (
+  path: PathSegment[],
+  schema: z.ZodType,
+  setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>,
+  fieldRefs: React.MutableRefObject<FieldRefs>,
+  options: RegisterOptions,
+) => {
+  onChange: React.ChangeEventHandler<any>
+  ref: React.Ref<any>
+  name: string
+}
+
+// Register for native elements (input, textarea, select)
+const register: RegisterFn = (path, fieldSchema, setFormValue, fieldRefs, options) => {
+  const name = path.map(p => p.key).join('.')
+  const unwrapped = unwrapZodType(fieldSchema)
+
+  return {
+    onChange: e => {
+      let newValue: string | boolean | undefined = e.currentTarget.value
+      if (!(unwrapped instanceof z.ZodString) && newValue === '') {
+        newValue = undefined
+      }
+      // If this field uses a checkbox, read it's `checked` state
+      if (e.currentTarget.type?.toLowerCase() === 'checkbox') {
+        newValue = e.currentTarget.checked
+      }
+      setFormValue(v => setDeepProp(v, path, newValue) as typeof v)
+    },
+    name,
+    ref: ref => {
+      // Store field ref in an object to dedupe them per field
+      if (ref) {
+        // If the user has provided their own ref to use as well
+        if (options.ref) {
+          if (typeof options.ref === 'function') {
+            options.ref(ref)
+          } else {
+            options.ref.current = ref
+          }
+        }
+
+        // Note, radio fields use the same name per group, so they have to be referenced by value
+        const refIndex = isRadio(ref) ? `${name}.${ref.value}` : name
+        fieldRefs.current[refIndex] = { path, ref }
+      } else {
+        delete fieldRefs.current[name]
+      }
+    },
+  } satisfies React.ComponentProps<'input'>
 }
