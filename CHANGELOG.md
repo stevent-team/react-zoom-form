@@ -1,5 +1,12 @@
 # @stevent-team/react-zoom-form
 
+## 1.1.4
+
+### Patch Changes
+
+- f403cf8: Remove lib export of internal register function
+- f403cf8: Properly pass through the correct Zod schema types to the field chain using a second InnerSchema type param
+
 ## 1.1.3
 
 ### Patch Changes
