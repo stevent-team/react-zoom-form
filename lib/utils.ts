@@ -1,19 +1,22 @@
 import { Field, FieldRefs, RegisterFn, RegisterOptions } from '.'
 import { z } from 'zod'
 
-type AnyZodContainer = z.AnyZodObject | z.AnyZodTuple | z.ZodArray<any>
+// A Zod object that can hold nested data
+type AnyZodContainer = z.AnyZodObject | z.AnyZodTuple | z.ZodArray<any> | z.ZodRecord | z.ZodMap | z.ZodSet
 
 // Creates the type for the field chain by recusively travelling through the Zod schema
-type recursiveFieldChain<Schema extends z.ZodType, LeafValue> =
+type RecursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   z.infer<Schema> extends LeafValue ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['_type'][K]> }
   : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
   : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
-  : Schema extends (z.ZodDefault<AnyZodContainer> | z.ZodOptional<AnyZodContainer> | z.ZodNullable<AnyZodContainer>) ? FieldChain<Schema['_def']['innerType']>
-  : Schema extends (z.ZodEffects<AnyZodContainer>) ? FieldChain<Schema['_def']['schema']>
+  : Schema extends (z.ZodDefault<AnyZodContainer> | z.ZodOptional<AnyZodContainer> | z.ZodNullable<AnyZodContainer>) ? FieldChain<Schema, Schema['_def']['innerType']>
+  : Schema extends z.ZodEffects<AnyZodContainer> ? FieldChain<Schema, Schema['_def']['schema']>
+  : Schema extends z.ZodLazy<AnyZodContainer> ? FieldChain<Schema, ReturnType<Schema['_def']['getter']>>
+  : Schema extends z.ZodPipeline<AnyZodContainer, AnyZodContainer> ? FieldChain<Schema, Schema['_def']['out']>
   : LeafValue
 
-export type FieldChain<Schema extends z.ZodType> = Field<Schema> & Required<recursiveFieldChain<Schema, {
+export type FieldChain<Schema extends z.ZodType, InnerSchema extends z.ZodType = Schema> = Field<Schema> & Required<RecursiveFieldChain<InnerSchema, {
   /**
    * Provides props to pass to native elements (input, textarea, select)
    *
