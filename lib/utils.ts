@@ -50,10 +50,24 @@ export type PartialObject<T> = T extends any[] ? T : Partial<T>
 /** Excludes undefined from a type, but keeps null */
 export type NonUndefined<T> = T extends undefined ? never : T
 
+const getZodObjectShape = (type: z.ZodType) => {
+  const unwrapped = unwrapZodType(type)
+  if (unwrapped instanceof z.ZodObject) return unwrapped.shape
+  return {}
+}
+
 export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
 
   if (type instanceof z.ZodEffects) return unwrapZodType(type.innerType())
+
+  if ((type instanceof z.ZodDiscriminatedUnion || type instanceof z.ZodUnion) && Array.isArray(type.options)) {
+    return z.ZodObject.create(type.options.reduce((a, o) => ({ ...a, ...getZodObjectShape(o) }), {}))
+  }
+
+  if (type instanceof z.ZodIntersection) {
+    return z.ZodObject.create({ ...getZodObjectShape(type._def.left), ...getZodObjectShape(type._def.right) })
+  }
 
   const anyType = type as any
   if (anyType._def?.innerType) return unwrapZodType(anyType._def.innerType)
@@ -108,17 +122,16 @@ export const fieldChain = <S extends z.ZodType>(
         return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, fieldRefs, controls)
       }
 
-      // If the current Zod schema is not an array or object, we must be at a leaf node
-      if (!(unwrapped instanceof z.ZodObject)) {
-        // Leaf node functions
-        if (key === 'register') return (options: RegisterOptions = {}) => register(path, schema, controls.setFormValue, fieldRefs, options)
-        if (key === 'name') return () => path.map(p => p.key).join('.')
-
-        // Attempted to access a property that didn't exist
-        throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
+      if (unwrapped instanceof z.ZodObject) {
+        return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
       }
 
-      return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
+      // Leaf node functions
+      if (key === 'register') return (options: RegisterOptions = {}) => register(path, schema, controls.setFormValue, fieldRefs, options)
+      if (key === 'name') return () => path.map(p => p.key).join('.')
+
+      // Attempted to access a property that didn't exist
+      throw new Error(`Unsupported type at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
     }
   }) as unknown // Never let them know your next move...
 
