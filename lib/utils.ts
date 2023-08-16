@@ -16,6 +16,10 @@ type RecursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   : Schema extends z.ZodPipeline<AnyZodContainer, AnyZodContainer> ? FieldChain<Schema, Schema['_def']['out']>
   : LeafValue
 
+/**
+ * Provides the type of the `fields` object from the `useForm` hook.
+ * You can use this if you intend to pass `fields` down through components to build a nested form.
+ */
 export type FieldChain<Schema extends z.ZodType, InnerSchema extends z.ZodType = Schema> = Field<Schema> & Required<RecursiveFieldChain<InnerSchema, {
   /**
    * Provides props to pass to native elements (input, textarea, select)
