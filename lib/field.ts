@@ -9,6 +9,7 @@ export type Field<Schema extends z.ZodType = z.ZodType> = {
     formValue: React.MutableRefObject<RecursivePartial<z.TypeOf<Schema>>>
     setFormValue: React.Dispatch<React.SetStateAction<RecursivePartial<z.ZodType>>>
     formErrors: z.ZodError<z.ZodType> | undefined
+    setFormErrors: React.Dispatch<React.SetStateAction<z.ZodError<z.ZodType> | undefined>>
   }
 }
 
@@ -77,6 +78,28 @@ export const controlled = <T>({ _field }: Field<z.ZodType<T>>): ControlledField<
  */
 export const fieldErrors = <T>({ _field: { formErrors, path } }: Field<z.ZodType<T>>): z.ZodIssue[] =>
   formErrors?.issues?.filter(issue => arrayStartsWith(issue.path, path.map(p => p.key))) ?? []
+
+/**
+ * Set an error for a field. Will clear any existing errors for or below the field provided.
+ *
+ * @example
+ * ```tsx
+ * setError(fields.image, { code: 'custom', message: 'Server failed to upload' })
+ * setError(fields, undefined) // Clear all errors
+ * ```
+ */
+export const setError = <T>({ _field: { setFormErrors, path } }: Field<z.ZodType<T>>, issue: Omit<z.ZodIssue, 'path'> | undefined) => {
+  // Clear all
+  if (issue === undefined && path.length === 0) return setFormErrors(undefined)
+
+  setFormErrors(formErrors => z.ZodError.create([
+    ...formErrors?.issues?.filter(issue => !arrayStartsWith(issue.path, path.map(p => p.key))) ?? [],
+    ...issue !== undefined ? [{
+      ...issue as z.ZodIssue,
+      path: path.map(s => s.key),
+    }] : [],
+  ]))
+}
 
 /**
  * Get the value of a field. You can also use the base `fields` object to
