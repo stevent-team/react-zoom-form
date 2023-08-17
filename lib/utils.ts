@@ -4,12 +4,19 @@ import { z } from 'zod'
 // A Zod object that can hold nested data
 type AnyZodContainer = z.AnyZodObject | z.AnyZodTuple | z.ZodArray<any> | z.ZodRecord | z.ZodMap | z.ZodSet
 
+// Intersect everything inside an array after running each through the FieldChain type
+type FieldChainEach<Schema extends z.ZodType, ArraySchema extends z.ZodType[]> = ArraySchema extends [infer First extends z.ZodType, ...infer Rest extends z.ZodType[]]
+  ? FieldChain<Schema, First> & FieldChainEach<Schema, Rest>
+  : unknown
+
 // Creates the type for the field chain by recusively travelling through the Zod schema
 type RecursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   z.infer<Schema> extends LeafValue ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['_type'][K]> }
   : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
   : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
+  : Schema extends z.ZodIntersection<any, any> ? FieldChain<Schema, Schema['_def']['left']> & FieldChain<Schema, Schema['_def']['right']>
+  : Schema extends (z.ZodUnion<any> | z.ZodDiscriminatedUnion<string, any>) ? FieldChainEach<Schema, Schema['options']>
   : Schema extends (z.ZodDefault<AnyZodContainer> | z.ZodOptional<AnyZodContainer> | z.ZodNullable<AnyZodContainer>) ? FieldChain<Schema, Schema['_def']['innerType']>
   : Schema extends z.ZodEffects<AnyZodContainer> ? FieldChain<Schema, Schema['_def']['schema']>
   : Schema extends z.ZodLazy<AnyZodContainer> ? FieldChain<Schema, ReturnType<Schema['_def']['getter']>>
