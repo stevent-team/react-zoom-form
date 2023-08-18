@@ -1,5 +1,16 @@
 # @stevent-team/react-zoom-form
 
+## 1.2.0
+
+### Minor Changes
+
+- 474563b: Add `setError` function to manually set or clear form errors
+- 72d8a73: Support for intersections and unions in the Zod schema
+
+### Patch Changes
+
+- 6f9613c: Export FieldChain helper type from the lib
+
 ## 1.1.4
 
 ### Patch Changes
