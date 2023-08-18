@@ -4,12 +4,19 @@ import { z } from 'zod'
 // A Zod object that can hold nested data
 type AnyZodContainer = z.AnyZodObject | z.AnyZodTuple | z.ZodArray<any> | z.ZodRecord | z.ZodMap | z.ZodSet
 
+// Intersect everything inside an array after running each through the FieldChain type
+type FieldChainEach<Schema extends z.ZodType, ArraySchema extends z.ZodType[]> = ArraySchema extends [infer First extends z.ZodType, ...infer Rest extends z.ZodType[]]
+  ? FieldChain<Schema, First> & FieldChainEach<Schema, Rest>
+  : unknown
+
 // Creates the type for the field chain by recusively travelling through the Zod schema
 type RecursiveFieldChain<Schema extends z.ZodType, LeafValue> =
   z.infer<Schema> extends LeafValue ? z.infer<Schema>
   : Schema extends z.AnyZodTuple ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['_type'][K]> }
   : Schema extends z.ZodArray<any> ? { [k: number]: FieldChain<Schema['_def']['type']> }
   : Schema extends z.AnyZodObject ? { [K in keyof z.infer<Schema>]: FieldChain<Schema['shape'][K]> }
+  : Schema extends z.ZodIntersection<any, any> ? FieldChain<Schema, Schema['_def']['left']> & FieldChain<Schema, Schema['_def']['right']>
+  : Schema extends (z.ZodUnion<any> | z.ZodDiscriminatedUnion<string, any>) ? FieldChainEach<Schema, Schema['options']>
   : Schema extends (z.ZodDefault<AnyZodContainer> | z.ZodOptional<AnyZodContainer> | z.ZodNullable<AnyZodContainer>) ? FieldChain<Schema, Schema['_def']['innerType']>
   : Schema extends z.ZodEffects<AnyZodContainer> ? FieldChain<Schema, Schema['_def']['schema']>
   : Schema extends z.ZodLazy<AnyZodContainer> ? FieldChain<Schema, ReturnType<Schema['_def']['getter']>>
@@ -54,10 +61,24 @@ export type PartialObject<T> = T extends any[] ? T : Partial<T>
 /** Excludes undefined from a type, but keeps null */
 export type NonUndefined<T> = T extends undefined ? never : T
 
+const getZodObjectShape = (type: z.ZodType) => {
+  const unwrapped = unwrapZodType(type)
+  if (unwrapped instanceof z.ZodObject) return unwrapped.shape
+  return {}
+}
+
 export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
 
   if (type instanceof z.ZodEffects) return unwrapZodType(type.innerType())
+
+  if ((type instanceof z.ZodDiscriminatedUnion || type instanceof z.ZodUnion) && Array.isArray(type.options)) {
+    return z.ZodObject.create(type.options.reduce((a, o) => ({ ...a, ...getZodObjectShape(o) }), {}))
+  }
+
+  if (type instanceof z.ZodIntersection) {
+    return z.ZodObject.create({ ...getZodObjectShape(type._def.left), ...getZodObjectShape(type._def.right) })
+  }
 
   const anyType = type as any
   if (anyType._def?.innerType) return unwrapZodType(anyType._def.innerType)
@@ -112,17 +133,16 @@ export const fieldChain = <S extends z.ZodType>(
         return fieldChain(unwrapped._def.type, [...path, { key: Number(key), type: 'array' }], register, fieldRefs, controls)
       }
 
-      // If the current Zod schema is not an array or object, we must be at a leaf node
-      if (!(unwrapped instanceof z.ZodObject)) {
-        // Leaf node functions
-        if (key === 'register') return (options: RegisterOptions = {}) => register(path, schema, controls.setFormValue, fieldRefs, options)
-        if (key === 'name') return () => path.map(p => p.key).join('.')
-
-        // Attempted to access a property that didn't exist
-        throw new Error(`Expected ZodObject at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
+      if (unwrapped instanceof z.ZodObject) {
+        return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
       }
 
-      return fieldChain(unwrapped.shape[key], [...path, { key, type: 'object' }], register, fieldRefs, controls)
+      // Leaf node functions
+      if (key === 'register') return (options: RegisterOptions = {}) => register(path, schema, controls.setFormValue, fieldRefs, options)
+      if (key === 'name') return () => path.map(p => p.key).join('.')
+
+      // Attempted to access a property that didn't exist
+      throw new Error(`Unsupported type at "${path.map(p => p.key).join('.')}" got ${schema.constructor.name}`)
     }
   }) as unknown // Never let them know your next move...
 

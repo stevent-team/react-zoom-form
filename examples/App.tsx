@@ -8,6 +8,7 @@ import Nested from './nested'
 import Coerced from './coerced'
 import Conditional from './conditional'
 import Controlled from './controlled'
+import Intersection from './intersection'
 import KitchenSink from './kitchen-sink'
 
 interface Example {
@@ -46,6 +47,11 @@ const EXAMPLES: Example[] = [
     name: '3rd Party & Controlled Fields',
     path: '/controlled',
     component: Controlled,
+  },
+  {
+    name: 'Intersection Schema',
+    path: '/intersection',
+    component: Intersection,
   },
   {
     name: 'Kitchen Sink',
