@@ -116,7 +116,7 @@ export const useForm = <Schema extends z.ZodTypeAny>({
   }, [validate])
 
   const fields = useMemo(() => new Proxy({}, {
-    get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors })[key]
+    get: (_target, key) => fieldChain(schema, [], register, fieldRefs, { formValue, setFormValue, formErrors, setFormErrors })[key]
   }) as unknown as FieldChain<Schema>, [schema, setFormValue, formErrors])
 
   return {

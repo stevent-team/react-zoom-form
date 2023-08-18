@@ -104,6 +104,17 @@ You can customize the error messages in several ways.
     ```
 </details>
 
+#### Manually Set and Clear Errors
+
+Use the `setError` function to set or clear errors for a particular field, or the entire form.
+
+```tsx
+setError(fields.image, { code: 'custom', message: 'Server failed to upload' })
+
+// Clear all errors
+setError(fields, undefined)
+```
+
 ### Coercion and Validation
 
 Importantly, native HTML `input`, `textarea` and `select` all use strings to store their values. Because of this, `undefined` or `null` are not valid values for native fields, and the following schema defines a string that is _not_ required*.
