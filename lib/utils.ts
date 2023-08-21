@@ -67,7 +67,9 @@ const getZodObjectShape = (type: z.ZodType) => {
   return {}
 }
 
-export const unwrapZodType = (type: z.ZodType): z.ZodType => {
+export const unwrapZodType = (type: z.ZodType | undefined): z.ZodType | undefined => {
+  if (type === undefined) return type
+
   if (type instanceof z.ZodObject || type instanceof z.ZodArray) return type
 
   if (type instanceof z.ZodEffects) return unwrapZodType(type.innerType())
@@ -81,7 +83,7 @@ export const unwrapZodType = (type: z.ZodType): z.ZodType => {
   }
 
   const anyType = type as any
-  if (anyType._def?.innerType) return unwrapZodType(anyType._def.innerType)
+  if (anyType?._def?.innerType) return unwrapZodType(anyType._def.innerType)
 
   return type
 }
