@@ -1,6 +1,6 @@
 {
   "name": "@stevent-team/react-zoom-form",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "React forms powered by Zod",
   "keywords": [
     "react",
