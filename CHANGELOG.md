@@ -1,5 +1,11 @@
 # @stevent-team/react-zoom-form
 
+## 1.2.1
+
+### Patch Changes
+
+- a96199b: Fail gracefully if an undefined schema is encountered
+
 ## 1.2.0
 
 ### Minor Changes
